@@ -12,7 +12,7 @@ Skills that tell an agent how to do one particular job in a repository. Each ski
 | [describe-deployment-diagram](describe-deployment-diagram/skill.md) | A folder contains an independently deployable executable, service, container or package | `<folder>/.dev/deployment-diagram.json` |
 | [knowledge-driven-development](knowledge-driven-development/skill.md) | The repository follows [knowledge-driven development](https://github.com/david-brandt-the-icelander/knowledge-driven-development): planning a feature, moving a mark, reviewing a pull request, adopting the convention | Marked knowledge documents, change logs |
 
-`validate_diagrams.py` checks the four diagram schemas and their examples, then every diagram under `src/**/.dev/`: schema validity, unique IDs, relationship endpoints, the folder each diagram claims, source paths that exist, and child-diagram references that point at a diagram of the right kind for the right folder. It needs the `jsonschema` package. Schema validation shows a diagram is well-formed, not that it is true; truth is checked by an agent reading the sources the diagram cites.
+`validate_diagrams.py` checks the four diagram schemas and their examples, then every `.dev/*.json` diagram in the repository (skipping `.git`, `node_modules` and build output): schema validity, unique IDs, relationship endpoints, the folder each diagram claims, source paths that exist, and child-diagram references that point at a diagram of the right kind for the right folder. It needs the `jsonschema` package. Schema validation shows a diagram is well-formed, not that it is true; truth is checked by an agent reading the sources the diagram cites.
 
 ## The `.dev/` convention
 
@@ -20,7 +20,7 @@ Architecture is documented next to the code it describes. Every source folder wi
 
 ## Installing in a repository
 
-1. Copy the skill folders and `validate_diagrams.py` to `Meta/Agents/Skills/` in the target repository. The skills and the validator refer to that path, and the validator scans `src/` for `.dev/*.json`; adjust both if your layout differs.
+1. Copy the skill folders and `validate_diagrams.py` to `Meta/Agents/Skills/` in the target repository. The skills refer to that path; the validator finds the schemas next to itself and scans the whole repository for `.dev/*.json`.
 2. Add to the top-level `AGENTS.md` a concise statement of when to use the skills, for example:
 
    ```markdown

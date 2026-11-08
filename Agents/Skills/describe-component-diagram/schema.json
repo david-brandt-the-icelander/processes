@@ -64,20 +64,55 @@
           },
           "folder": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Repository-relative directory holding the component. Required unless external is true."
           },
           "diagram": {
             "type": "string",
             "minLength": 1
+          },
+          "external": {
+            "type": "boolean",
+            "description": "True for a component outside this repository (another repository's service, a managed database, a third party). It has no folder or diagram."
           }
         },
         "required": [
           "id",
           "name",
-          "responsibility",
-          "folder"
+          "responsibility"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "if": {
+          "properties": {
+            "external": {
+              "const": true
+            }
+          },
+          "required": [
+            "external"
+          ]
+        },
+        "then": {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "folder"
+                ]
+              },
+              {
+                "required": [
+                  "diagram"
+                ]
+              }
+            ]
+          }
+        },
+        "else": {
+          "required": [
+            "folder"
+          ]
+        }
       },
       "minItems": 1
     },

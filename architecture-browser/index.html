@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture browser</title>
+<meta name="description" content="Browse a repository's architecture from the JSON diagrams in its .dev folders.">
+<style>
+  /* Placeholder styling only: a design pass comes later. */
+  :root { color-scheme: light dark; --fg: #1b1f23; --muted: #5b6570; --bg: #ffffff; --line: #d6dbe0; --accent: #0b6aa8; --panel: #f5f7f9; }
+  @media (prefers-color-scheme: dark) { :root { --fg: #e6e9ec; --muted: #9aa5b0; --bg: #14181c; --line: #303841; --accent: #6db8ea; --panel: #1b2026; } }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+  header, main { padding: 12px 16px; }
+  header { border-bottom: 1px solid var(--line); }
+  h1 { font-size: 1.2rem; margin: 0; }
+  h2 { font-size: 1.1rem; margin: 1.2rem 0 .3rem; }
+  h3 { font-size: 1rem; margin: 1rem 0 .3rem; }
+  a { color: var(--accent); }
+  .muted { color: var(--muted); }
+  form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  input[type=url] { flex: 1 1 320px; padding: 6px 8px; font: inherit; }
+  button { padding: 6px 12px; font: inherit; }
+  #layout { display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 16px; }
+  @media (max-width: 760px) { #layout { grid-template-columns: 1fr; } }
+  nav ul { list-style: none; margin: 0; padding: 0; }
+  nav li a { display: block; padding: 2px 4px; text-decoration: none; overflow-wrap: anywhere; }
+  nav li a.current { background: var(--panel); font-weight: 600; }
+  nav .count { color: var(--muted); font-size: .85em; }
+  section.diagram { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 16px; }
+  .graph { overflow-x: auto; background: var(--panel); padding: 8px; border-radius: 4px; }
+  .graph svg { max-width: none; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: .3rem 0; }
+  th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 3px 6px; overflow-wrap: anywhere; }
+  details { margin: .4rem 0; }
+  code { font-size: .9em; }
+  .error { color: #b3261e; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Architecture browser</h1>
+  <p id="intro" class="muted">Shows the architecture of a repository from the JSON diagrams in its <code>.dev/</code> folders (component, class, state and deployment diagrams, as described by the <a href="https://github.com/david-brandt-the-icelander/processes/tree/main/Agents/Skills">diagram skills</a>).</p>
+  <form id="pick" hidden>
+    <label for="repo" class="muted" style="width:100%">The http(s) address of a public GitHub or GitLab repository, or of a folder in one:</label>
+    <input id="repo" type="url" required placeholder="https://github.com/owner/repository" autocomplete="url">
+    <button type="submit">Browse</button>
+  </form>
+  <p id="source" hidden></p>
+</header>
+<main>
+  <p id="status" role="status"></p>
+  <div id="layout" hidden>
+    <nav aria-label="Folders with diagrams"><ul id="folders"></ul></nav>
+    <div id="view"></div>
+  </div>
+</main>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const status = (text, error = false) => { $("status").textContent = text; $("status").className = error ? "error" : "muted"; };
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const KIND_ORDER = { component: 0, deployment: 1, class: 2, state: 3 };
+
+// ── The repository: GitHub or GitLab, from the address given ─────────────
+
+/** Splits an address into a host adapter, the repository and an optional ref and folder. */
+function parseAddress(raw) {
+  let s = raw.trim().replace(/^git@([^:]+):/, "https://$1/");
+  const url = new URL(s);
+  if (!/^https?:$/.test(url.protocol)) throw new Error("Give an http or https address.");
+  const parts = url.pathname.replace(/\.git$/, "").split("/").filter(Boolean).map(decodeURIComponent);
+  if (url.hostname === "github.com" || url.hostname === "www.github.com") {
+    if (parts.length < 2) throw new Error("A GitHub address needs an owner and a repository.");
+    const [owner, repo, mode, ...rest] = parts;
+    return { host: github, owner, repo, rest: mode === "tree" || mode === "blob" ? rest : [] };
+  }
+  // Anything else is tried as GitLab (gitlab.com or a self-hosted GitLab with CORS).
+  const dash = parts.indexOf("-");
+  const project = (dash >= 0 ? parts.slice(0, dash) : parts).join("/");
+  const rest = dash >= 0 && (parts[dash + 1] === "tree" || parts[dash + 1] === "blob") ? parts.slice(dash + 2) : [];
+  if (!project.includes("/")) throw new Error("Give the address of a GitHub or GitLab repository.");
+  return { host: gitlab, origin: url.origin, project, rest };
+}
+
+async function getJson(url) {
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) { const e = new Error(`${res.status} ${res.statusText} from ${new URL(url).host}`); e.status = res.status; throw e; }
+  return res.json();
+}
+
+/** Tries ref = first segment, then first two, …, since a branch name may contain slashes. */
+async function resolveRef(rest, tryRef) {
+  for (let n = 1; n <= rest.length; n++) {
+    const ref = rest.slice(0, n).join("/");
+    try { return { ref, path: rest.slice(n).join("/"), data: await tryRef(ref) }; }
+    catch (e) { if (e.status !== 404 && e.status !== 422) throw e; }
+  }
+  throw new Error("No such branch, tag or commit.");
+}
+
+const github = {
+  name: "GitHub",
+  async list(r) {
+    const api = `https://api.github.com/repos/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}`;
+    const tree = (ref) => getJson(`${api}/git/trees/${encodeURIComponent(ref)}?recursive=1`);
+    let found;
+    if (r.rest.length) found = await resolveRef(r.rest, tree);
+    else { const ref = (await getJson(api)).default_branch; found = { ref, path: "", data: await tree(ref) }; }
+    r.ref = found.ref; r.path = found.path;
+    r.truncated = !!found.data.truncated;
+    return found.data.tree.filter((e) => e.type === "blob").map((e) => e.path);
+  },
+  raw: (r, path) => `https://raw.githubusercontent.com/${r.owner}/${r.repo}/${encodeURIComponent(r.ref)}/${path.split("/").map(encodeURIComponent).join("/")}`,
+  blob: (r, path) => `https://github.com/${r.owner}/${r.repo}/blob/${r.ref}/${path}`,
+  label: (r) => `${r.owner}/${r.repo}`,
+};
+
+const gitlab = {
+  name: "GitLab",
+  async list(r) {
+    const api = `${r.origin}/api/v4/projects/${encodeURIComponent(r.project)}`;
+    const page = async (ref, n) => getJson(`${api}/repository/tree?recursive=true&per_page=100&page=${n}&ref=${encodeURIComponent(ref)}`);
+    let found;
+    if (r.rest.length) found = await resolveRef(r.rest, (ref) => page(ref, 1));
+    else { const ref = (await getJson(api)).default_branch; found = { ref, path: "", data: await page(ref, 1) }; }
+    r.ref = found.ref; r.path = found.path;
+    const all = [...found.data];
+    for (let n = 2, last = found.data; last.length === 100 && n <= 200; n++) { last = await page(r.ref, n); all.push(...last); }
+    return all.filter((e) => e.type === "blob").map((e) => e.path);
+  },
+  raw: (r, path) => `${r.origin}/api/v4/projects/${encodeURIComponent(r.project)}/repository/files/${encodeURIComponent(path)}/raw?ref=${encodeURIComponent(r.ref)}`,
+  blob: (r, path) => `${r.origin}/${r.project}/-/blob/${r.ref}/${path}`,
+  label: (r) => r.project,
+};
+
+// ── Loading ──────────────────────────────────────────────────────────────
+
+let repo = null;
+/** folder → its diagrams, sorted by kind. */
+const byFolder = new Map();
+
+async function load(address) {
+  $("source").hidden = false;
+  $("source").innerHTML = `Repository: <a href="${esc(address)}">${esc(address)}</a>`;
+  try { repo = parseAddress(address); } catch (e) { status(e.message, true); return; }
+  status(`Listing the repository on ${repo.host.name}…`);
+  let paths;
+  try { paths = await repo.host.list(repo); } catch (e) { status(`Couldn't list the repository: ${e.message}`, true); return; }
+  const prefix = repo.path ? repo.path.replace(/\/$/, "") + "/" : "";
+  const wanted = paths.filter((p) => /(^|\/)\.dev\/[^/]+\.json$/.test(p) && p.startsWith(prefix));
+  if (!wanted.length) { status(`No .dev/*.json diagrams in ${repo.host.label(repo)}${repo.path ? "/" + repo.path : ""} at ${repo.ref}.`, true); return; }
+  status(`Reading ${wanted.length} diagrams…`);
+  const problems = [];
+  await Promise.all(wanted.map(async (path) => {
+    try {
+      const res = await fetch(repo.host.raw(repo, path));
+      if (!res.ok) throw new Error(`${res.status}`);
+      const doc = await res.json();
+      if (!doc || !(doc.kind in KIND_ORDER)) throw new Error("not a diagram");
+      const folder = typeof doc.folder === "string" ? doc.folder : path.split("/").slice(0, -2).join("/");
+      doc._path = path;
+      if (!byFolder.has(folder)) byFolder.set(folder, []);
+      byFolder.get(folder).push(doc);
+    } catch (e) { problems.push(`${path}: ${e.message}`); }
+  }));
+  for (const docs of byFolder.values()) docs.sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a._path.localeCompare(b._path));
+  const count = [...byFolder.values()].reduce((n, d) => n + d.length, 0);
+  status(`${count} diagrams in ${byFolder.size} folders of ${repo.host.label(repo)} at ${repo.ref}.${repo.truncated ? " The repository is too large to list in full; some diagrams may be missing." : ""}${problems.length ? ` Skipped: ${problems.join("; ")}` : ""}`);
+  $("layout").hidden = false;
+  showFolders();
+  route();
+}
+
+// ── Folders ──────────────────────────────────────────────────────────────
+
+const folders = () => [...byFolder.keys()].sort((a, b) => a.localeCompare(b));
+const depth = (f) => (f ? f.split("/").length : 0);
+
+function showFolders() {
+  const list = folders();
+  const base = Math.min(...list.map(depth));
+  $("folders").innerHTML = list.map((f) => {
+    const docs = byFolder.get(f);
+    return `<li style="padding-left:${(depth(f) - base) * 12}px"><a href="#${esc(encodeURI(f))}" data-folder="${esc(f)}">${esc(f.split("/").pop() || f || "/")}</a> <span class="count" title="${esc(docs.map((d) => d.kind).join(", "))}">${docs.map((d) => d.kind[0]).join("")}</span></li>`;
+  }).join("");
+}
+
+function route() {
+  const list = folders();
+  const want = decodeURI(location.hash.slice(1));
+  const folder = byFolder.has(want) ? want : list.slice().sort((a, b) => depth(a) - depth(b) || a.localeCompare(b))[0];
+  for (const a of document.querySelectorAll("#folders a")) a.classList.toggle("current", a.dataset.folder === folder);
+  void showFolder(folder);
+}
+window.addEventListener("hashchange", route);
+
+// ── One folder's diagrams ────────────────────────────────────────────────
+
+const folderLink = (f) => (byFolder.has(f) ? `<a href="#${esc(encodeURI(f))}">${esc(f)}</a>` : esc(f));
+const fileLink = (path) => `<a href="${esc(repo.host.blob(repo, path))}">${esc(path)}</a>`;
+const table = (head, rows) => rows.length ? `<table><thead><tr>${head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table>` : "";
+
+let mermaid = null;
+async function getMermaid() {
+  if (mermaid) return mermaid;
+  const m = (await import("https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs")).default;
+  m.initialize({ startOnLoad: false, securityLevel: "strict", theme: matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "default", flowchart: { htmlLabels: false } });
+  return (mermaid = m);
+}
+
+let renderCount = 0;
+async function showFolder(folder) {
+  const docs = byFolder.get(folder) ?? [];
+  const view = $("view");
+  view.innerHTML = `<h2>${esc(folder || "/")}</h2>` + docs.map((d, i) => `
+    <section class="diagram" id="d${i}">
+      <h3>${esc(d.title)} <span class="muted">(${esc(d.kind)})</span></h3>
+      <p>${esc(d.description)}</p>
+      <div class="graph" aria-label="${esc(d.kind)} diagram">Drawing…</div>
+      ${details(d)}
+      <p class="muted">From ${fileLink(d._path)}.</p>
+    </section>`).join("");
+  let m;
+  try { m = await getMermaid(); } catch { for (const g of view.querySelectorAll(".graph")) g.textContent = "The drawing library couldn't load; the tables below have everything."; return; }
+  for (const [i, d] of docs.entries()) {
+    const box = view.querySelector(`#d${i} .graph`);
+    try { box.innerHTML = (await m.render(`m${++renderCount}`, toMermaid(d))).svg; }
+    catch (e) { box.innerHTML = `<span class="error">Couldn't draw this diagram: ${esc(e.message ?? e)}</span>`; }
+  }
+}
+
+function details(d) {
+  const rels = (d.relationships ?? []).map((r) => [esc(r.from), esc(r.kind), esc(r.to), esc(r.description)]);
+  const sources = (d.sources ?? []).map((s) => [fileLink(s.path), `<code>${esc(s.symbol)}</code>`]);
+  let main = "";
+  if (d.kind === "component") main = table(["Component", "Responsibility", "Folder"], d.components.map((c) => [esc(c.name), esc(c.responsibility), c.external ? "<span class=muted>outside the repository</span>" : folderLink(c.folder)]));
+  if (d.kind === "class") main = table(["Type", "Kind", "Members", "Sources"], d.types.map((t) => [esc(t.name) + (t.external ? " <span class=muted>(elsewhere)</span>" : ""), esc(t.kind), t.members.map((m) => `<code>${esc(m)}</code>`).join("<br>"), t.sources.map(fileLink).join("<br>")]));
+  if (d.kind === "state") main = `<p>Machine: <code>${esc(d.machine)}</code>. Starts in <strong>${esc(d.initialState)}</strong>.</p>`
+    + table(["State", "Description"], d.states.map((s) => [esc(s.id) + (s.terminal ? " <span class=muted>(final)</span>" : ""), esc(s.description)]))
+    + table(["From", "To", "Trigger", "Guard", "Action"], d.transitions.map((t) => [esc(t.from), esc(t.to), esc(t.trigger), esc(t.guard), esc(t.action)]));
+  if (d.kind === "deployment") main = table(["Node", "Kind", "Description", "Only when"], d.nodes.map((n) => [esc(n.name), esc(n.kind), esc(n.description), esc(n.condition)]))
+    + table(["Artifact", "Deployed to", "Source", "Description"], d.artifacts.map((a) => [esc(a.name), esc(a.deployedTo), fileLink(a.source), esc(a.description)]));
+  return `<details open><summary>Details</summary>${main}${table(["From", "Kind", "To", "Description"], rels)}${sources.length ? "<h4>Sources</h4>" + table(["File", "Symbol"], sources) : ""}</details>`;
+}
+
+// ── Mermaid text for each kind ───────────────────────────────────────────
+
+const label = (s) => `"${String(s).replace(/"/g, "#quot;").replace(/[<>]/g, (c) => (c === "<" ? "#lt;" : "#gt;"))}"`;
+function ids(list) { const m = new Map(); list.forEach((x, i) => m.set(x.id, `n${i}`)); return m; }
+
+function toMermaid(d) {
+  if (d.kind === "component") return componentText(d);
+  if (d.kind === "deployment") return deploymentText(d);
+  if (d.kind === "class") return classText(d);
+  return stateText(d);
+}
+
+function componentText(d) {
+  const id = ids(d.components);
+  const contains = d.relationships.filter((r) => r.kind === "contains");
+  const owner = new Map(contains.map((r) => [r.to, r.from]));
+  const parents = new Set(contains.map((r) => r.from));
+  const lines = ["flowchart LR"];
+  const node = (c) => c.external ? `${id.get(c.id)}${"{{"}${label(c.name)}${"}}"}` : `${id.get(c.id)}[${label(c.name)}]`;
+  for (const c of d.components) if (!owner.has(c.id) && !parents.has(c.id)) lines.push("  " + node(c));
+  for (const p of parents) {
+    const c = d.components.find((x) => x.id === p);
+    lines.push(`  subgraph ${id.get(p)}[${label(c.name)}]`);
+    for (const k of d.components) if (owner.get(k.id) === p && !parents.has(k.id)) lines.push("    " + node(k));
+    lines.push("  end");
+  }
+  for (const r of d.relationships) if (r.kind !== "contains") lines.push(`  ${id.get(r.from)} --> ${id.get(r.to)}`);
+  for (const c of d.components) if (c.external) lines.push(`  style ${id.get(c.id)} stroke-dasharray: 4 3`);
+  return lines.join("\n");
+}
+
+function deploymentText(d) {
+  const id = ids(d.nodes);
+  const shape = (n) => {
+    const l = label(n.name);
+    if (n.kind === "database" || n.kind === "cache") return `[(${l})]`;
+    if (n.kind === "client") return `([${l}])`;
+    if (n.kind === "external-service") return `{{${l}}}`;
+    return `[${l}]`;
+  };
+  const hosted = new Map(d.relationships.filter((r) => r.kind === "hosts").map((r) => [r.to, r.from]));
+  const hosts = new Set(hosted.values());
+  const lines = ["flowchart LR"];
+  for (const n of d.nodes) if (!hosts.has(n.id) && !hosted.has(n.id)) lines.push(`  ${id.get(n.id)}${shape(n)}`);
+  for (const h of hosts) {
+    const n = d.nodes.find((x) => x.id === h);
+    lines.push(`  subgraph ${id.get(h)}[${label(n.name)}]`);
+    for (const k of d.nodes) if (hosted.get(k.id) === h) lines.push(`    ${id.get(k.id)}${shape(k)}`);
+    d.artifacts.filter((a) => a.deployedTo === h).forEach((a, i) => lines.push(`    a_${id.get(h)}_${i}>${label(a.name)}]`));
+    lines.push("  end");
+  }
+  d.artifacts.forEach((a, i) => { if (!hosts.has(a.deployedTo)) { lines.push(`  a${i}>${label(a.name)}]`); lines.push(`  a${i} -.- ${id.get(a.deployedTo)}`); } });
+  for (const r of d.relationships) if (r.kind !== "hosts") lines.push(`  ${id.get(r.from)} -->|${r.kind}| ${id.get(r.to)}`);
+  for (const n of d.nodes) if (n.condition) lines.push(`  style ${id.get(n.id)} stroke-dasharray: 4 3`);
+  return lines.join("\n");
+}
+
+function classText(d) {
+  const id = ids(d.types);
+  const member = (m) => m.replace(/[<>]/g, "~").replace(/[{}"]/g, "").replace(/\s+/g, " ");
+  const lines = ["classDiagram"];
+  for (const t of d.types) {
+    lines.push(`  class ${id.get(t.id)}[${label(t.name)}] {`);
+    const stereotype = [t.external ? "external" : "", t.kind !== "class" ? t.kind : ""].filter(Boolean).join(" ");
+    if (stereotype) lines.push(`    <<${stereotype}>>`);
+    for (const m of t.members) lines.push(`    ${member(m)}`);
+    lines.push("  }");
+  }
+  for (const r of d.relationships) {
+    const a = id.get(r.from), b = id.get(r.to);
+    lines.push(r.kind === "inherits" ? `  ${b} <|-- ${a}` : r.kind === "implements" ? `  ${b} <|.. ${a}` : `  ${a} ..> ${b}`);
+  }
+  return lines.join("\n");
+}
+
+function stateText(d) {
+  const id = ids(d.states);
+  const text = (s) => String(s).replace(/[:;#<>{}"]/g, " ").replace(/\s+/g, " ").trim();
+  const lines = ["stateDiagram-v2"];
+  for (const s of d.states) lines.push(`  state ${label(s.id)} as ${id.get(s.id)}`);
+  lines.push(`  [*] --> ${id.get(d.initialState)}`);
+  for (const t of d.transitions) lines.push(`  ${id.get(t.from)} --> ${id.get(t.to)} : ${text(t.trigger)}${t.guard ? ` [${text(t.guard)}]` : ""}`);
+  for (const s of d.states) if (s.terminal) lines.push(`  ${id.get(s.id)} --> [*]`);
+  return lines.join("\n");
+}
+
+// ── Start: the address comes from ?url=; the form is only for choosing one ──
+
+const address = new URLSearchParams(location.search).get("url");
+if (address) {
+  void load(address);
+} else {
+  $("pick").hidden = false;
+  $("pick").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams({ url: $("repo").value.trim() });
+    location.search = params.toString();
+  });
+  $("repo").focus();
+}
+</script>
+</body>
+</html>

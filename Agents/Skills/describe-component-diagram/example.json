@@ -23,6 +23,12 @@
       "responsibility": "Retrieves pending messages.",
       "folder": "src/ExampleWorker/Queue",
       "diagram": "src/ExampleWorker/Queue/.dev/component-diagram.json"
+    },
+    {
+      "id": "broker",
+      "name": "Message broker",
+      "responsibility": "Holds pending messages between producers and the worker.",
+      "external": true
     }
   ],
   "relationships": [
@@ -31,6 +37,12 @@
       "to": "queue",
       "kind": "depends-on",
       "description": "Reads pending messages through the adapter."
+    },
+    {
+      "from": "queue",
+      "to": "broker",
+      "kind": "depends-on",
+      "description": "Polls the broker for pending messages."
     }
   ]
 }
