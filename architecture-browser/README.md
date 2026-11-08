@@ -8,16 +8,20 @@ Live at <https://icelander.net/v1/apps/architecture-browser>. For example, [retr
 
 - Open the page and give the address of a public repository, or of a folder in one. After that the address field is gone: the page shows that repository until the address changes.
 - Or pass the address in the query string: `?url=https://github.com/owner/repo`. It takes a repository, a branch or tag (`/tree/<ref>`, slashes in the name included) and a folder (`/tree/<ref>/<folder>`).
-- The left column lists the folders that have diagrams, as a tree; the letters after each name are the kinds of diagram there. The address of a folder's view ends in `#<folder>`, so it can be linked to.
-- Each diagram is drawn, then listed in full: its parts, its relationships or transitions, and the source files it cites, linked to the repository.
+- The left column lists the folders that have diagrams, as a tree; the small icons after each name are the kinds of diagram there, and the filter above it narrows the tree by folder, diagram or part name. The address of a folder's view ends in `#<folder>`, so it can be linked to.
+- The diagrams are the way around. A part with a round badge stands for a folder that has diagrams of its own (a sub-component, the folder an artifact is built from, the folder that declares an external type): click it to open that folder. Any other part opens a panel with everything the diagram says about it, with its relationships as links to the parts at their other ends. Hovering a part lights up its neighbours; hovering a line says what the relationship is.
+- Drag a drawing to move it, use ⌘ or Ctrl with the scroll wheel (or a pinch) to zoom, and the buttons in its corner to zoom or fit it again.
+- Under each drawing, the diagram is listed in full: its parts, its relationships or transitions, and the source files it cites, linked to the repository.
 
 ## How it works
 
 Everything runs in the browser. For GitHub it lists the repository with one call to the GitHub API (the default branch, then the recursive tree) and reads each `.dev/*.json` file from `raw.githubusercontent.com`. Unauthenticated, the GitHub API allows 60 requests an hour per address, and a page load uses two. For GitLab it uses the GitLab API's repository tree and raw file endpoints. Other hosts are not supported: a plain git server can't be listed from a browser.
 
-Diagrams are drawn with [Mermaid](https://mermaid.js.org/) 11.4.1, loaded from jsDelivr. If it can't load, the tables still show everything. The page has no build step, no server and no other dependencies: it is one HTML file.
+The page draws the diagrams itself, as SVG. [dagre](https://github.com/dagrejs/dagre) 3.1.3 places the parts; everything else (the shapes, the lines, the labels and the icons) is in the page. Each kind of diagram has its own drawing: components as plates nested in the part that contains them, deployments with each host as a frame around what it runs, classes as cards with their members, and state machines with a start point, double-ringed final states and each transition labelled with what fires it. Pieces of a class diagram that don't touch are laid out separately and packed together; state and deployment diagrams are laid out left to right or top to bottom, whichever is drawn larger.
 
-The styling is a placeholder. A design pass is still to come.
+The icons are drawn for this page, on a 24-unit grid. A component's icon is chosen from its name (an engine gets a gear, a renderer a screen, a database a cylinder, and so on, with a cube when nothing matches), a deployment node's from its kind and a type's from its kind.
+
+dagre and the Barlow typefaces are loaded from jsDelivr. If dagre can't load, the tables still show everything; without the typefaces the page falls back to system fonts. There is no build step and no server: it is one HTML file.
 
 ## Publishing
 
