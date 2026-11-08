@@ -1,11 +1,22 @@
-"""Validate architecture schemas, examples and diagrams. Requires jsonschema."""
+"""Validate architecture schemas, examples and diagrams. Requires jsonschema.
+
+Usage: python3 Meta/Agents/Skills/validate_diagrams.py [repository-root]
+
+The skills are found next to this script. Every `.dev/*.json` file in the repository is checked,
+except under directories that never hold source: .git, node_modules, build output and the skills
+themselves.
+"""
 
 import json
+import os
 import sys
 from collections import Counter
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
+
+KINDS = ("component", "class", "state", "deployment")
+SKIPPED_DIRS = {".git", "node_modules", "dist", "dist-test", "build", "bin", "obj", ".wrangler", "__pycache__"}
 
 
 def read_json(path):
@@ -52,10 +63,18 @@ def check_graph(document):
             require(artifact["deployedTo"] in ids, "Unknown deployment target")
 
 
+def diagram_files(root, skills):
+    for directory, subdirs, files in os.walk(root):
+        here = Path(directory)
+        subdirs[:] = sorted(d for d in subdirs if d not in SKIPPED_DIRS and (here / d).resolve() != skills)
+        if here.name == ".dev":
+            yield from (here / f for f in sorted(files) if f.endswith(".json"))
+
+
 def validate(root):
-    skills = root / "Meta/Agents/Skills"
+    skills = Path(__file__).resolve().parent
     schemas = {}
-    for kind in ("component", "class", "state", "deployment"):
+    for kind in KINDS:
         folder = skills / f"describe-{kind}-diagram"
         schema = read_json(folder / "schema.json")
         Draft202012Validator.check_schema(schema)
@@ -68,10 +87,11 @@ def validate(root):
         schemas[kind] = validator
 
     counts = Counter()
-    for path in sorted((root / "src").rglob(".dev/*.json")):
+    for path in diagram_files(root, skills):
         document = read_json(path)
         try:
             kind = document["kind"]
+            require(kind in schemas, f"Unknown diagram kind: {kind}")
             schemas[kind].validate(document)
             check_graph(document)
             expected_schema = skills / f"describe-{kind}-diagram/schema.json"
@@ -83,21 +103,22 @@ def validate(root):
             require(path.name.endswith(".state-diagram.json") if kind == "state"
                     else path.name == expected_name, "Unexpected diagram filename")
             for source in document["sources"]:
-                require(repo_path(root, source["path"]).is_file(), "Source is not a file")
+                require(repo_path(root, source["path"]).is_file(), f"Source is not a file: {source['path']}")
             for item in document.get("types", []):
                 for source in item["sources"]:
-                    require(repo_path(root, source).is_file(), "Type source is not a file")
+                    require(repo_path(root, source).is_file(), f"Type source is not a file: {source}")
             for component in document.get("components", []):
-                require(repo_path(root, component["folder"]).is_dir(), "Component folder is not a directory")
+                if "folder" in component:
+                    require(repo_path(root, component["folder"]).is_dir(),
+                            f"Component folder is not a directory: {component['folder']}")
                 if "diagram" in component:
-                    target_path = repo_path(root, component["diagram"])
-                    target = read_json(target_path)
-                    require(target["kind"] == "component" and target["folder"] == component["folder"],
+                    target = read_json(repo_path(root, component["diagram"]))
+                    require(target["kind"] == "component" and target["folder"] == component.get("folder"),
                             "Component reference describes a different folder or diagram kind")
             for artifact in document.get("artifacts", []):
-                require(repo_path(root, artifact["source"]).is_file(), "Artifact source is not a file")
-        except (KeyError, ValueError) as error:
-            raise ValueError(f"{path.relative_to(root)}: {error}") from error
+                require(repo_path(root, artifact["source"]).is_file(), f"Artifact source is not a file: {artifact['source']}")
+        except Exception as error:
+            raise ValueError(f"{path.relative_to(root)}: {getattr(error, 'message', error)}") from error
         counts[kind] += 1
     require(sum(counts.values()) > 0, "No diagrams found")
     print("Validated four schemas and examples; " + ", ".join(

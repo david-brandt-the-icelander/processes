@@ -64,7 +64,8 @@
               "record",
               "struct",
               "interface",
-              "enum"
+              "enum",
+              "type"
             ]
           },
           "sources": {
