@@ -7,7 +7,7 @@ Things I make for software development processes in general: conventions, agent 
 ```
 Agents/
   Skills/                agent skills: how an agent does one particular job in a repository
-                         (architecture diagrams per folder, knowledge-driven development)
+                         (architecture diagrams per folder, actors, knowledge-driven development)
 architecture-browser/    a static page that draws a repository's .dev/ diagrams,
                          live at https://icelander.net/v1/apps/architecture-browser
 ```
