@@ -1,6 +1,6 @@
 # Architecture browser
 
-A static web page that shows a repository's architecture and behavior from the JSON views in its `.dev/` folders. Four are diagrams, described by the skills in [Agents/Skills](../Agents/Skills/README.md): component, class, state and deployment. Four describe behavior: use-case, capability, feature and operation. A folder can have any mix of them.
+A static web page that shows a repository's architecture and behavior from the JSON views in its `.dev/` folders. Four are diagrams, described by the skills in [Agents/Skills](../Agents/Skills/README.md): component, class, state and deployment. Four describe behavior, with skills of their own: [use-case](../Agents/Skills/describe-use-case/skill.md), [capability](../Agents/Skills/describe-capability/skill.md), [feature](../Agents/Skills/describe-feature/skill.md) and [operation](../Agents/Skills/describe-operation/skill.md). A folder can have any mix of them.
 
 Live at <https://icelander.net/v1/apps/architecture-browser>. For example, [retro-games](https://icelander.net/v1/apps/architecture-browser?url=https://github.com/david-brandt-the-icelander/retro-games).
 
