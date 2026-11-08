@@ -70,6 +70,21 @@
   .bar .spacer { flex: 1; }
   .quiet { background: none; border: 1px solid var(--rule); border-radius: 7px; padding: 5px 10px; font: 500 14px/1.2 var(--semi); color: var(--ink2); cursor: pointer; text-decoration: none; white-space: nowrap; }
   .quiet:hover { color: var(--ink); border-color: var(--ink3); }
+  .quiet .ic { width: 15px; height: 15px; margin-right: 5px; vertical-align: -.16em; }
+  #token { color: var(--ink); border-color: color-mix(in srgb, var(--k-component) 60%, var(--rule)); }
+  #token .ic { color: var(--k-component); }
+
+  /* ── Token ───────────────────────────────────────────────────────────── */
+  #token-panel { position: fixed; z-index: 40; top: 62px; right: 20px; width: min(430px, calc(100vw - 40px)); padding: 18px; border: 1px solid var(--rule); border-radius: 12px; background: var(--sheet); box-shadow: 0 18px 50px rgb(0 0 0 / .3); }
+  #token-panel h2 { font: 600 18px/1.2 var(--semi); margin: 0 0 8px; }
+  #token-panel p { margin: 0 0 13px; font-size: 14px; line-height: 1.5; color: var(--ink2); }
+  #token-panel input[type="password"] { width: 100%; padding: 10px 12px; font: 400 14px/1.2 var(--mono); color: var(--ink); background: var(--plate); border: 1.5px solid var(--rule); border-radius: 8px; }
+  #token-panel input[type="password"]:focus { outline: none; border-color: var(--k-component); }
+  #token-panel .keep { display: flex; align-items: center; gap: 8px; margin: 12px 0 14px; font-size: 14px; color: var(--ink2); }
+  #token-panel .row { display: flex; gap: 8px; align-items: center; }
+  #token-panel .row .spacer { flex: 1; }
+  #token-panel .primary { padding: 8px 16px; font-size: 15px; border-radius: 8px; }
+  #status .quiet { margin-left: 8px; }
 
   /* ── Landing ─────────────────────────────────────────────────────────── */
   #landing { max-width: 980px; padding: 9vh 28px 60px; margin: 0 auto; }
@@ -138,10 +153,13 @@
   .crumbs a:hover { color: var(--ink); text-decoration: underline; }
   .crumbs .sep { color: var(--rule); }
   .folder-head h1 { font: 700 clamp(38px, 4.6vw, 56px)/1 var(--cond); margin: 0; letter-spacing: -.005em; overflow-wrap: anywhere; }
-  .folder-meta { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; margin: 14px 0 0; font: 500 15px/1.3 var(--semi); color: var(--ink2); }
-  .jump { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--ink2); font: inherit; }
-  .jump .ic { color: var(--k); width: 17px; height: 17px; }
-  .jump:hover { color: var(--ink); }
+  /* One tab per kind of view in the folder; the content area shows the chosen kind alone. */
+  .ktabs { display: flex; flex-wrap: wrap; align-items: stretch; gap: 2px; margin: 26px 0 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 62px; font: 500 15px/1.3 var(--semi); }
+  .ktab { display: inline-flex; align-items: center; gap: 7px; margin-bottom: -1px; padding: 9px 13px 10px; border: 0; border-bottom: 2px solid transparent; border-radius: 7px 7px 0 0; background: none; cursor: pointer; color: var(--ink2); font: inherit; }
+  .ktab .ic { width: 17px; height: 17px; color: var(--k); opacity: .55; }
+  .ktab:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); color: var(--ink); }
+  .ktab:hover .ic, .ktab[aria-selected="true"] .ic { opacity: 1; }
+  .ktab[aria-selected="true"] { background: none; color: var(--ink); font-weight: 600; border-bottom-color: var(--k); }
   .inside { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; align-items: center; }
   .inside > span { font: 500 15px/1 var(--semi); color: var(--ink3); margin-right: 2px; }
   .chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 10px 5px 8px; border-radius: 8px; border: 1px solid var(--rule); background: var(--plate); text-decoration: none; font: 600 15px/1.2 var(--semi); }
@@ -149,6 +167,7 @@
   .chip > .ic { color: var(--ink3); width: 16px; height: 16px; }
 
   section.diagram { margin-top: 44px; scroll-margin-top: 70px; }
+  .dpanel > section.diagram:first-child { margin-top: 26px; }
   .dhead { display: flex; gap: 14px; align-items: flex-start; }
   .dhead h2 { font: 600 25px/1.15 var(--semi); margin: 0; }
   .dhead .what { font: 500 15px/1.3 var(--semi); color: var(--k); margin: 2px 0 0; }
@@ -282,18 +301,22 @@
   <a class="brand" href="./"><svg class="ic"><use href="#i-mark"/></svg><span>Architecture browser</span></a>
   <div class="repo" id="repo" hidden></div>
   <span class="spacer"></span>
+  <button class="quiet" id="token" hidden></button>
   <a class="quiet" id="change" href="?" hidden>Choose <span>another repository</span></a>
 </header>
 
+<div id="token-panel" role="dialog" aria-labelledby="token-title" hidden></div>
+
 <section id="landing" hidden>
   <h1>See how a repository is put together</h1>
-  <p class="lede">Give the address of a public GitHub or GitLab repository, or of a folder in one. The browser draws the diagrams and lists the use cases, capabilities, features and operations kept in its <code>.dev/</code> folders, and you walk from one folder into the next by clicking the parts in the drawings.</p>
+  <p class="lede">Give the address of a GitHub or GitLab repository, or of a folder in one. The browser draws the diagrams and lists the use cases, capabilities, features and operations kept in its <code>.dev/</code> folders, and you walk from one folder into the next by clicking the parts in the drawings.</p>
   <form id="pick">
     <label for="repo-url" hidden>Repository address</label>
     <input id="repo-url" type="url" required placeholder="https://github.com/owner/repository" autocomplete="url">
     <button class="primary" type="submit">Browse</button>
   </form>
   <p class="example">Or open <a href="?url=https%3A%2F%2Fgithub.com%2Fdavid-brandt-the-icelander%2Fretro-games">retro-games</a> as an example. The diagrams follow the <a href="https://github.com/david-brandt-the-icelander/processes/tree/main/Agents/Skills">diagram skills</a>.</p>
+  <p class="example">A private repository needs an access token. Give its address and the browser will ask for one; the token stays in this browser and goes to that host alone.</p>
   <div class="kinds">
     <div class="kind-component"><span class="tile"><svg class="ic"><use href="#i-kind-component"/></svg></span><h2>Component</h2><p>What a folder is made of, and what each part depends on.</p></div>
     <div class="kind-deployment"><span class="tile"><svg class="ic"><use href="#i-kind-deployment"/></svg></span><h2>Deployment</h2><p>Where the code runs: clients, hosts, processes and stores.</p></div>
@@ -328,7 +351,17 @@ const kindCount = (k, n) => `${n} ${KIND_ORDER[k] < 4 ? k + " diagram" : k.repla
 const DAGRE = "https://cdn.jsdelivr.net/npm/@dagrejs/dagre@3.1.3/+esm";
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
-function status(text, kind = "") { $("status").textContent = text; $("status").className = kind; }
+/** The line under the bar. `offer` puts a button after it, for the one thing worth doing about it. */
+function status(text, kind = "", offer = null) {
+  const el = $("status");
+  el.textContent = text; el.className = kind;
+  if (!offer) return;
+  const b = document.createElement("button");
+  b.className = "quiet"; b.textContent = offer.label;
+  // Without this the document handler below would see the click outside the panel and shut it again.
+  b.addEventListener("click", (e) => { e.stopPropagation(); offer.run(); });
+  el.append(" ", b);
+}
 
 // ── Icons ─────────────────────────────────────────────────────────────────
 // Drawn for this page on a 24-unit grid: 1.6 strokes with round ends, and
@@ -468,13 +501,78 @@ function parseAddress(raw) {
   return { host: gitlab, origin: url.origin, project, rest };
 }
 
-async function getJson(url) {
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+// ── Tokens ───────────────────────────────────────────────────────────────
+// A private repository needs the reader's own access token. It is kept in
+// their browser and sent to one host: a GitHub token must never reach a
+// self-hosted GitLab, so tokens are stored under the host they belong to.
+
+const TOKENS = "architecture-browser.tokens";
+/** sessionStorage first: a token kept only for this tab wins over one left on the browser. */
+const store = (name) => { try { return window[name] ?? null; } catch { return null; } };
+const stores = () => [store("sessionStorage"), store("localStorage")].filter(Boolean);
+function held(store) { try { return JSON.parse(store.getItem(TOKENS) ?? "{}") ?? {}; } catch { return {}; } }
+/** The token for a repository's host, from whichever store has one. */
+function tokenFor(r) {
+  if (!r) return null;
+  const h = r.host.tokenHost(r);
+  for (const s of stores()) { const t = held(s)[h]; if (t) return t; }
+  return null;
+}
+/** Replaces the host's token everywhere; a null value forgets it. */
+function saveToken(r, value, keep) {
+  const h = r.host.tokenHost(r);
+  for (const s of stores()) { const all = held(s); delete all[h]; try { s.setItem(TOKENS, JSON.stringify(all)); } catch { /* blocked */ } }
+  if (!value) return;
+  const s = (keep ? store("localStorage") : store("sessionStorage")) ?? stores()[0];
+  if (!s) { status("This browser won't keep the token, so it can't be used.", "error"); return; }
+  const all = held(s); all[h] = value;
+  try { s.setItem(TOKENS, JSON.stringify(all)); } catch { status("This browser wouldn't keep the token.", "error"); }
+}
+/** What authenticates a request to the repository's own host; nothing without a token. */
+const auth = (r) => { const t = tokenFor(r); return t ? r.host.authHeader(t) : {}; };
+
+function showTokenButton() {
+  const b = $("token"), has = repo && tokenFor(repo);
+  b.hidden = !has;
+  if (!has) return;
+  b.innerHTML = `${ic("key")}Token added`;
+  b.title = `A token is in use for ${repo.host.tokenHost(repo)}. Open to replace or forget it.`;
+}
+
+const closeTokenPanel = () => { $("token-panel").hidden = true; };
+
+function openTokenPanel() {
+  if (!repo) return;
+  const host = repo.host.tokenHost(repo), has = !!tokenFor(repo), p = $("token-panel");
+  p.innerHTML = `<h2 id="token-title">Token for ${esc(host)}</h2>
+    <p>${esc(repo.host.tokenHelp)} It is kept in this browser and sent to ${esc(host)} alone.</p>
+    <input id="token-value" type="password" autocomplete="off" spellcheck="false" placeholder="${has ? "Paste a token to replace the one in use" : "Paste the token"}" aria-label="Token for ${esc(host)}">
+    <label class="keep"><input id="token-keep" type="checkbox"> Keep it on this browser after the tab closes</label>
+    <div class="row"><button class="primary" id="token-save">Save and reload</button>${has ? `<button class="quiet" id="token-forget">Forget it</button>` : ""}<span class="spacer"></span><button class="quiet" id="token-cancel">Cancel</button></div>`;
+  p.hidden = false;
+  $("token-value").focus();
+  const save = () => { const v = $("token-value").value.trim(); if (!v) { closeTokenPanel(); return; } saveToken(repo, v, $("token-keep").checked); location.reload(); };
+  $("token-save").addEventListener("click", save);
+  $("token-forget")?.addEventListener("click", () => { saveToken(repo, null, false); location.reload(); });
+  $("token-cancel").addEventListener("click", closeTokenPanel);
+  p.addEventListener("keydown", (e) => { if (e.key === "Escape") closeTokenPanel(); else if (e.key === "Enter" && e.target.id === "token-value") save(); });
+}
+$("token").addEventListener("click", () => ($("token-panel").hidden ? openTokenPanel() : closeTokenPanel()));
+document.addEventListener("click", (e) => { if (!$("token-panel").hidden && !e.target.closest("#token-panel, #token")) closeTokenPanel(); });
+
+/** The button to offer when a host refuses, or null when a token wouldn't help. */
+const tokenOffer = (st) => ([401, 403, 404].includes(st) ? { label: tokenFor(repo) ? "Replace the token" : "Add a token", run: openTokenPanel } : null);
+
+async function getJson(url, extra = {}) {
+  const res = await fetch(url, { headers: { Accept: "application/json", ...auth(repo), ...extra } });
   if (!res.ok) {
-    const host = new URL(url).host;
-    const e = new Error(res.status === 403 && host === "api.github.com"
-      ? "GitHub allows 60 unauthenticated requests an hour from one address, and they are used up. Try again in a while."
-      : res.status === 404 ? `${host} has no such repository, or it is private.` : `${res.status} ${res.statusText} from ${host}`);
+    const host = new URL(url).host, signed = !!tokenFor(repo);
+    const e = new Error(
+      res.status === 401 ? `${host} refused the token. It may be wrong, expired, or for another account.`
+      : res.status === 403 && signed ? `${host} refused the request. The token may not cover this repository.`
+      : res.status === 403 && host === "api.github.com" ? "GitHub allows 60 unauthenticated requests an hour from one address, and they are used up. A token raises that to 5,000, or try again in a while."
+      : res.status === 404 ? `${host} has no such repository, or ${signed ? "the token cannot see it" : "it is private"}.`
+      : `${res.status} ${res.statusText} from ${host}`);
     e.status = res.status; throw e;
   }
   return res.json();
@@ -492,6 +590,9 @@ async function resolveRef(rest, tryRef) {
 
 const github = {
   name: "GitHub",
+  tokenHost: () => "github.com",
+  authHeader: (t) => ({ Authorization: `Bearer ${t}` }),
+  tokenHelp: "A fine-grained personal access token with Contents: read on the repository, made under Settings → Developer settings on GitHub.",
   async list(r) {
     const api = `https://api.github.com/repos/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}`;
     const tree = (ref) => getJson(`${api}/git/trees/${encodeURIComponent(ref)}?recursive=1`);
@@ -502,7 +603,14 @@ const github = {
     r.truncated = !!found.data.truncated;
     return found.data.tree.filter((e) => e.type === "blob").map((e) => e.path);
   },
-  raw: (r, path) => `https://raw.githubusercontent.com/${r.owner}/${r.repo}/${encodeURIComponent(r.ref)}/${path.split("/").map(encodeURIComponent).join("/")}`,
+  // raw.githubusercontent.com turns away an Authorization header at CORS, so a signed-in read goes
+  // through the API instead, which serves the file itself for this media type.
+  read(r, path) {
+    const p = path.split("/").map(encodeURIComponent).join("/");
+    return tokenFor(r)
+      ? [`https://api.github.com/repos/${encodeURIComponent(r.owner)}/${encodeURIComponent(r.repo)}/contents/${p}?ref=${encodeURIComponent(r.ref)}`, { Accept: "application/vnd.github.raw" }]
+      : [`https://raw.githubusercontent.com/${r.owner}/${r.repo}/${encodeURIComponent(r.ref)}/${p}`, {}];
+  },
   blob: (r, path) => `https://github.com/${r.owner}/${r.repo}/blob/${r.ref}/${path}`,
   home: (r) => `https://github.com/${r.owner}/${r.repo}`,
   label: (r) => `${r.owner}/${r.repo}`,
@@ -510,6 +618,9 @@ const github = {
 
 const gitlab = {
   name: "GitLab",
+  tokenHost: (r) => new URL(r.origin).host,
+  authHeader: (t) => ({ "PRIVATE-TOKEN": t }),
+  tokenHelp: "A personal access token with the read_api scope, made under Access tokens in your GitLab profile.",
   async list(r) {
     const api = `${r.origin}/api/v4/projects/${encodeURIComponent(r.project)}`;
     const page = async (ref, n) => getJson(`${api}/repository/tree?recursive=true&per_page=100&page=${n}&ref=${encodeURIComponent(ref)}`);
@@ -521,7 +632,7 @@ const gitlab = {
     for (let n = 2, last = found.data; last.length === 100 && n <= 200; n++) { last = await page(r.ref, n); all.push(...last); }
     return all.filter((e) => e.type === "blob").map((e) => e.path);
   },
-  raw: (r, path) => `${r.origin}/api/v4/projects/${encodeURIComponent(r.project)}/repository/files/${encodeURIComponent(path)}/raw?ref=${encodeURIComponent(r.ref)}`,
+  read: (r, path) => [`${r.origin}/api/v4/projects/${encodeURIComponent(r.project)}/repository/files/${encodeURIComponent(path)}/raw?ref=${encodeURIComponent(r.ref)}`, {}],
   blob: (r, path) => `${r.origin}/${r.project}/-/blob/${r.ref}/${path}`,
   home: (r) => `${r.origin}/${r.project}`,
   label: (r) => r.project,
@@ -545,11 +656,12 @@ async function pool(items, n, fn) {
 async function load(address) {
   try { repo = parseAddress(address); } catch (e) { status(e.message, "error"); $("landing").hidden = false; return; }
   $("repo").hidden = false; $("change").hidden = false;
+  showTokenButton();
   $("repo").innerHTML = `<a href="${esc(address)}">${esc(repo.host.label(repo))}</a>`;
   status(`Listing ${repo.host.label(repo)} on ${repo.host.name}…`, "loading");
   const drawing = import(DAGRE).then((m) => (dagre = m)).catch(() => null);
   let paths;
-  try { paths = await repo.host.list(repo); } catch (e) { status(`Couldn't list the repository. ${e.message}`, "error"); return; }
+  try { paths = await repo.host.list(repo); } catch (e) { status(`Couldn't list the repository. ${e.message}`, "error", tokenOffer(e.status)); return; }
   $("repo").insertAdjacentHTML("beforeend", `<span class="ref" title="Branch, tag or commit">${esc(repo.ref)}</span>`);
   const prefix = repo.path ? repo.path.replace(/\/$/, "") + "/" : "";
   const wanted = paths.filter((p) => /(^|\/)\.dev\/[^/]+\.json$/.test(p) && p.startsWith(prefix));
@@ -558,7 +670,8 @@ async function load(address) {
   const problems = [];
   await pool(wanted, 12, async (path) => {
     try {
-      const res = await fetch(repo.host.raw(repo, path));
+      const [url, headers] = repo.host.read(repo, path);
+      const res = await fetch(url, { headers: { ...headers, ...auth(repo) } });
       if (!res.ok) throw new Error(`${res.status}`);
       const doc = await res.json();
       if (!doc || !(doc.kind in KIND_ORDER)) throw new Error("not a diagram");
@@ -1164,7 +1277,8 @@ function camera(wrap, svg, cam, L) {
   });
   const stop = () => { if (drag?.moved) { wrap.dataset.dragged = "1"; setTimeout(() => delete wrap.dataset.dragged, 0); } drag = null; wrap.classList.remove("panning"); };
   wrap.addEventListener("pointerup", stop); wrap.addEventListener("pointercancel", stop);
-  new ResizeObserver(() => { if (!st.touched) fit(); else { clamp(); apply(); } }).observe(wrap);
+  // A drawing in a tab that isn't showing has no width to measure: leave its camera be until it is back.
+  new ResizeObserver(() => { if (!wrap.clientWidth) return; if (!st.touched) fit(); else { clamp(); apply(); } }).observe(wrap);
   /** Brings a part into view if it is outside. */
   const reveal = (b) => {
     const W = wrap.clientWidth, H = svg.clientHeight;
@@ -1209,8 +1323,10 @@ const LEGENDS = {
 
 // ── One folder's diagrams ────────────────────────────────────────────────
 
-/** Per drawn diagram: its layout, camera and the parts by key. */
+/** Per drawn diagram: its layout, camera and the parts by key; a hole until its tab is opened. */
 let drawn = [];
+/** Which kind of view the folder is showing: the tab that is open. */
+let shownKind = null;
 
 function showFolder(folder) {
   const docs = byFolder.get(folder) ?? [];
@@ -1220,12 +1336,32 @@ function showFolder(folder) {
   const kids = childrenOf(folder);
   const counts = new Map();
   docs.forEach((d, i) => { if (!counts.has(d.kind)) counts.set(d.kind, []); counts.get(d.kind).push(i); });
+  const kinds = [...counts.keys()];
+  // Stay on the kind being read when the next folder has it too; otherwise open the first.
+  if (!counts.has(shownKind)) shownKind = kinds[0] ?? null;
+  const panel = (k) => `<div class="dpanel" role="tabpanel" id="panel-${k}" data-kind="${k}" aria-labelledby="tab-${k}"${k === shownKind ? "" : " hidden"}>${counts.get(k).map((i) => diagramSection(docs[i], i)).join("")}</div>`;
   view.innerHTML = `<div class="folder-head">
       ${crumbs.length ? `<div class="crumbs">${crumbs.join(`<span class="sep">/</span>`)}<span class="sep">/</span></div>` : ""}
       <h1>${esc(segs[segs.length - 1] || "/")}</h1>
-      <div class="folder-meta">${[...counts].map(([k, is]) => `<button class="jump kind-${k}" data-jump="${is[0]}">${ic("kind-" + k)}${kindCount(k, is.length)}</button>`).join("")}</div>
       ${kids.length ? `<div class="inside"><span>Inside</span>${kids.map((k) => `<a class="chip" href="${esc(folderHash(k))}">${ic("folder")}${esc(rel(k, folder))}${pips(byFolder.get(k))}</a>`).join("")}</div>` : ""}
-    </div>` + docs.map((d, i) => `
+    </div>
+    <div class="ktabs" role="tablist" aria-label="Kinds of view in this folder">${kinds.map((k) => `<button class="ktab kind-${k}" role="tab" id="tab-${k}" data-kind="${k}" aria-controls="panel-${k}" aria-selected="${k === shownKind}" tabindex="${k === shownKind ? 0 : -1}">${ic("kind-" + k)}${kindCount(k, counts.get(k).length)}</button>`).join("")}</div>`
+    + kinds.map(panel).join("");
+  const strip = view.querySelector(".ktabs");
+  strip.addEventListener("click", (e) => { const t = e.target.closest(".ktab"); if (t) selectKind(t.dataset.kind); });
+  strip.addEventListener("keydown", (e) => {
+    const step = { ArrowRight: 1, ArrowLeft: -1, Home: -Infinity, End: Infinity }[e.key];
+    if (step === undefined) return;
+    e.preventDefault();
+    const at = kinds.indexOf(shownKind);
+    selectKind(kinds[step === -Infinity ? 0 : step === Infinity ? kinds.length - 1 : (at + step + kinds.length) % kinds.length], true);
+  });
+  drawn = [];
+  drawKind();
+}
+
+/** One diagram, whole: its heading, its drawing if it has one, and everything it says. */
+const diagramSection = (d, i) => `
     <section class="diagram kind-${d.kind}" id="d${i}" data-file="${esc(d._path.split("/").pop())}">
       <div class="dhead"><span class="tile">${ic("kind-" + d.kind)}</span><div><h2>${esc(d.title)}</h2><p class="what">${KIND_NAME[d.kind]}${d.kind === "state" ? ` of <code>${esc(d.machine)}</code>` : ""}</p></div></div>
       <p class="ddesc">${esc(d.description)}</p>
@@ -1233,9 +1369,29 @@ function showFolder(folder) {
       <div class="legend">${LEGENDS[d.kind].map(([g, t]) => `<span>${g}${esc(t)}</span>`).join("")}</div>` : ""}
       ${cards(d)}
       ${details(d, i)}
-    </section>`).join("");
-  for (const b of view.querySelectorAll("[data-jump]")) b.addEventListener("click", () => $("d" + b.dataset.jump).scrollIntoView({ behavior: reducedMotion.matches ? "auto" : "smooth" }));
-  drawn = docs.map((d, i) => drawDiagram(d, i, folder));
+    </section>`;
+
+/** Opens one kind's tab and closes the rest. Does nothing if this folder has no such kind. */
+function selectKind(k, focusTab = false) {
+  const view = $("view"), tab = [...view.querySelectorAll(".ktab")].find((t) => t.dataset.kind === k);
+  if (!tab) return;
+  if (k !== shownKind) {
+    shownKind = k;
+    closeInspector();
+    for (const t of view.querySelectorAll(".ktab")) { const on = t.dataset.kind === k; t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1; }
+    for (const p of view.querySelectorAll(".dpanel")) p.hidden = p.dataset.kind !== k;
+    drawKind();
+    // The tabs are what was just clicked: keep them in sight when the page is scrolled past them.
+    const strip = view.querySelector(".ktabs");
+    if (strip.getBoundingClientRect().top < 54) strip.scrollIntoView({ block: "start", behavior: reducedMotion.matches ? "auto" : "smooth" });
+  }
+  if (focusTab) tab.focus();
+}
+
+/** Draws the diagrams of the kind now showing: a drawing in a closed tab has no width to be laid out in. */
+function drawKind() {
+  const docs = byFolder.get(current) ?? [];
+  docs.forEach((d, i) => { if (d.kind === shownKind && !(i in drawn)) drawn[i] = drawDiagram(d, i, current); });
 }
 
 function drawDiagram(d, i, folder) {
@@ -1379,10 +1535,14 @@ function focusPart(focus) {
   const [kind, ...restOf] = focus.split(":"), name = restOf.join(":");
   if (kind === "view") {
     const sec = [...$("view").querySelectorAll("section[data-file]")].find((x) => x.dataset.file === name);
+    if (!sec) return;
+    selectKind(sec.closest(".dpanel").dataset.kind);
     // After layout has settled: the folder may have just been drawn.
-    if (sec) requestAnimationFrame(() => sec.scrollIntoView({ block: "start", behavior: reducedMotion.matches ? "auto" : "smooth" }));
+    requestAnimationFrame(() => sec.scrollIntoView({ block: "start", behavior: reducedMotion.matches ? "auto" : "smooth" }));
     return;
   }
+  // The part may be in a kind whose tab isn't open: open it, which draws it.
+  selectKind(kind);
   for (const e of drawn) {
     if (!e || e.d.kind !== kind) continue;
     const n = e.parts.get(name) ?? [...e.parts.values()].find((p) => p.info?.title === name);
