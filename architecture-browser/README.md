@@ -1,6 +1,6 @@
 # Architecture browser
 
-A static web page that shows a repository's architecture from the JSON diagrams in its `.dev/` folders: the component, class, state and deployment diagrams described by the skills in [Agents/Skills](../Agents/Skills/README.md).
+A static web page that shows a repository's architecture and behavior from the JSON views in its `.dev/` folders. Four are diagrams, described by the skills in [Agents/Skills](../Agents/Skills/README.md): component, class, state and deployment. Four describe behavior: use-case, capability, feature and operation. A folder can have any mix of them.
 
 Live at <https://icelander.net/v1/apps/architecture-browser>. For example, [retro-games](https://icelander.net/v1/apps/architecture-browser?url=https://github.com/david-brandt-the-icelander/retro-games).
 
@@ -11,13 +11,18 @@ Live at <https://icelander.net/v1/apps/architecture-browser>. For example, [retr
 - The left column lists the folders that have diagrams, as a tree; the small icons after each name are the kinds of diagram there, and the filter above it narrows the tree by folder, diagram or part name. The address of a folder's view ends in `#<folder>`, so it can be linked to.
 - The diagrams are the way around. A part with a round badge stands for a folder that has diagrams of its own (a sub-component, the folder an artifact is built from, the folder that declares an external type): click it to open that folder. Any other part opens a panel with everything the diagram says about it, with its relationships as links to the parts at their other ends. Hovering a part lights up its neighbours; hovering a line says what the relationship is.
 - Drag a drawing to move it, use ⌘ or Ctrl with the scroll wheel (or a pinch) to zoom, and the buttons in its corner to zoom or fit it again.
-- Under each drawing, the diagram is listed in full: its parts, its relationships or transitions, and the source files it cites, linked to the repository.
+- A use case is drawn as its steps in order, people and outside systems apart from the system's own steps, with each alternative branching off its step as a dashed outcome. Click a step for its sources and the steps around it.
+- Capabilities, features and operations are written, not drawn: a card per capability, feature or use case (responsibility, access, behavior, outcome, constraints, the actor and goal), and a table of operations (action, entrypoint, authorization, result and what can make it fail). Each links to the source symbol it was read from.
+- Every view lists its related views, as links that open the other view in its own folder, which is the way from a feature to the operations and capability that implement it.
+- Under each drawing, the view is listed in full: its parts, its relationships or transitions, and the source files it cites, linked to the repository.
 
 ## How it works
 
 Everything runs in the browser. For GitHub it lists the repository with one call to the GitHub API (the default branch, then the recursive tree) and reads each `.dev/*.json` file from `raw.githubusercontent.com`. Unauthenticated, the GitHub API allows 60 requests an hour per address, and a page load uses two. For GitLab it uses the GitLab API's repository tree and raw file endpoints. Other hosts are not supported: a plain git server can't be listed from a browser.
 
 The page draws the diagrams itself, as SVG. [dagre](https://github.com/dagrejs/dagre) 3.1.3 places the parts; everything else (the shapes, the lines, the labels and the icons) is in the page. Each kind of diagram has its own drawing: components as plates nested in the part that contains them, deployments with each host as a frame around what it runs, classes as cards with their members, and state machines with a start point, double-ringed final states and each transition labelled with what fires it. Pieces of a class diagram that don't touch are laid out separately and packed together; state and deployment diagrams are laid out left to right or top to bottom, whichever is drawn larger.
+
+The four behavior views share one layout of facts and tables, except the use case, which goes through the same drawing as the diagrams. They carry `entities`, where the diagrams carry components, types or states, and `relatedViews`; the page reads both. A view of a kind it doesn't know is skipped and named in the status line.
 
 The icons are drawn for this page, on a 24-unit grid. A component's icon is chosen from its name (an engine gets a gear, a renderer a screen, a database a cylinder, and so on, with a cube when nothing matches), a deployment node's from its kind and a type's from its kind.
 
