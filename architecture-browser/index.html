@@ -80,6 +80,16 @@
   #token-panel p { margin: 0 0 13px; font-size: 14px; line-height: 1.5; color: var(--ink2); }
   #token-panel input[type="password"] { width: 100%; padding: 10px 12px; font: 400 14px/1.2 var(--mono); color: var(--ink); background: var(--plate); border: 1.5px solid var(--rule); border-radius: 8px; }
   #token-panel input[type="password"]:focus { outline: none; border-color: var(--k-component); }
+  #token-panel .held { list-style: none; margin: 0 0 14px; padding: 0; border: 1px solid var(--rule); border-radius: 8px; }
+  #token-panel .held li { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 11px; font-size: 13px; }
+  #token-panel .held li + li { border-top: 1px solid var(--rule); }
+  #token-panel .held code { flex: 1; min-width: 0; font: 400 13px/1.3 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+  #token-panel .held .using { font: 500 12px/1 var(--semi); padding: 3px 7px; border-radius: 99px; color: var(--k-component); background: color-mix(in srgb, var(--k-component) 14%, transparent); }
+  #token-panel .held .where { color: var(--ink3); white-space: nowrap; }
+  #token-panel .held .quiet { padding: 3px 8px; font-size: 13px; }
+  #token-panel .scope { border: 0; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; font-size: 14px; color: var(--ink2); }
+  #token-panel .scope legend { padding: 0; margin-bottom: 6px; font: 600 14px/1.2 var(--semi); color: var(--ink); }
+  #token-panel .scope label { display: flex; align-items: center; gap: 8px; overflow-wrap: anywhere; }
   #token-panel .keep { display: flex; align-items: center; gap: 8px; margin: 12px 0 14px; font-size: 14px; color: var(--ink2); }
   #token-panel .row { display: flex; gap: 8px; align-items: center; }
   #token-panel .row .spacer { flex: 1; }
@@ -505,71 +515,103 @@ function parseAddress(raw) {
 // A private repository needs the reader's own access token. It is kept in
 // their browser and sent to one host: a GitHub token must never reach a
 // self-hosted GitLab, so tokens are stored under the host they belong to.
+//
+// One reader can have several accounts on a host, each seeing different
+// repositories, so a token is kept under a scope: the host, an owner or group
+// on it, or one repository. A repository uses the narrowest scope around it.
 
 const TOKENS = "architecture-browser.tokens";
 /** sessionStorage first: a token kept only for this tab wins over one left on the browser. */
 const store = (name) => { try { return window[name] ?? null; } catch { return null; } };
 const stores = () => [store("sessionStorage"), store("localStorage")].filter(Boolean);
 function held(store) { try { return JSON.parse(store.getItem(TOKENS) ?? "{}") ?? {}; } catch { return {}; } }
-/** The token for a repository's host, from whichever store has one. */
-function tokenFor(r) {
+/** Where a token for the repository could be kept, widest first: the host, each owner or group, the repository. */
+function scopes(r) {
+  const h = r.host.tokenHost(r), parts = r.host.label(r).split("/");
+  return [h, ...parts.map((_, i) => `${h}/${parts.slice(0, i + 1).join("/")}`)];
+}
+/** The token with the narrowest scope around the repository, and that scope; null without one. */
+function tokenScope(r) {
   if (!r) return null;
-  const h = r.host.tokenHost(r);
-  for (const s of stores()) { const t = held(s)[h]; if (t) return t; }
+  const all = stores().map(held);
+  for (const scope of scopes(r).reverse()) for (const a of all) if (a[scope]) return { scope, token: a[scope] };
   return null;
 }
-/** Replaces the host's token everywhere; a null value forgets it. */
-function saveToken(r, value, keep) {
-  const h = r.host.tokenHost(r);
-  for (const s of stores()) { const all = held(s); delete all[h]; try { s.setItem(TOKENS, JSON.stringify(all)); } catch { /* blocked */ } }
+const tokenFor = (r) => tokenScope(r)?.token ?? null;
+/** Every token kept, by scope, with where it is kept. */
+function heldTokens() {
+  const out = new Map();
+  for (const [s, where] of [[store("sessionStorage"), "this tab"], [store("localStorage"), "this browser"]]) {
+    if (s) for (const scope of Object.keys(held(s))) if (!out.has(scope)) out.set(scope, where);
+  }
+  return [...out].sort(([a], [b]) => a.localeCompare(b));
+}
+/** Replaces the token for a scope everywhere; a null value forgets it. */
+function saveToken(scope, value, keep) {
+  for (const s of stores()) { const all = held(s); delete all[scope]; try { s.setItem(TOKENS, JSON.stringify(all)); } catch { /* blocked */ } }
   if (!value) return;
   const s = (keep ? store("localStorage") : store("sessionStorage")) ?? stores()[0];
   if (!s) { status("This browser won't keep the token, so it can't be used.", "error"); return; }
-  const all = held(s); all[h] = value;
+  const all = held(s); all[scope] = value;
   try { s.setItem(TOKENS, JSON.stringify(all)); } catch { status("This browser wouldn't keep the token.", "error"); }
 }
 /** What authenticates a request to the repository's own host; nothing without a token. */
 const auth = (r) => { const t = tokenFor(r); return t ? r.host.authHeader(t) : {}; };
 
 function showTokenButton() {
-  const b = $("token"), has = repo && tokenFor(repo);
-  b.hidden = !has;
-  if (!has) return;
-  b.innerHTML = `${ic("key")}Token added`;
-  b.title = `A token is in use for ${repo.host.tokenHost(repo)}. Open to replace or forget it.`;
+  const b = $("token"), using = repo && tokenScope(repo), any = heldTokens().length;
+  b.hidden = !repo || !any;
+  if (b.hidden) return;
+  b.innerHTML = `${ic("key")}${using ? "Token added" : "Tokens"}`;
+  b.title = using ? `The token for ${using.scope} is in use. Open to add, replace or forget tokens.` : "No token covers this repository. Open to add one or forget others.";
 }
 
 const closeTokenPanel = () => { $("token-panel").hidden = true; };
 
 function openTokenPanel() {
   if (!repo) return;
-  const host = repo.host.tokenHost(repo), has = !!tokenFor(repo), p = $("token-panel");
-  p.innerHTML = `<h2 id="token-title">Token for ${esc(host)}</h2>
-    <p>${esc(repo.host.tokenHelp)} It is kept in this browser and sent to ${esc(host)} alone.</p>
-    <input id="token-value" type="password" autocomplete="off" spellcheck="false" placeholder="${has ? "Paste a token to replace the one in use" : "Paste the token"}" aria-label="Token for ${esc(host)}">
+  const host = repo.host.tokenHost(repo), using = tokenScope(repo), all = scopes(repo), p = $("token-panel");
+  // An owner or group by default: that is what one account usually covers.
+  const chosen = using?.scope ?? all[Math.min(1, all.length - 1)];
+  const what = (s, i) => i === 0 ? `Every repository on ${s}` : i === all.length - 1 ? `Only ${s.slice(host.length + 1)}` : `Everything under ${s.slice(host.length + 1)}`;
+  const kept = heldTokens();
+  p.innerHTML = `<h2 id="token-title">Tokens</h2>
+    ${kept.length ? `<ul class="held">${kept.map(([s, where]) => `<li><code>${esc(s)}</code>${s === using?.scope ? `<span class="using">in use</span>` : ""}<span class="where">${where}</span><button class="quiet" data-forget="${esc(s)}">Forget</button></li>`).join("")}</ul>` : ""}
+    <p>${using ? `Replace the token for ${esc(using.scope)}, or add one` : "Add a token"} for ${esc(repo.host.label(repo))}. ${esc(repo.host.tokenHelp)} It is kept in this browser and sent to ${esc(host)} alone.</p>
+    <input id="token-value" type="password" autocomplete="off" spellcheck="false" placeholder="Paste the token" aria-label="Token for ${esc(host)}">
+    <fieldset class="scope"><legend>Use it for</legend>${all.map((s, i) => `<label><input type="radio" name="token-scope" value="${esc(s)}"${s === chosen ? " checked" : ""}> ${esc(what(s, i))}</label>`).join("")}</fieldset>
     <label class="keep"><input id="token-keep" type="checkbox"> Keep it on this browser after the tab closes</label>
-    <div class="row"><button class="primary" id="token-save">Save and reload</button>${has ? `<button class="quiet" id="token-forget">Forget it</button>` : ""}<span class="spacer"></span><button class="quiet" id="token-cancel">Cancel</button></div>`;
+    <div class="row"><button class="primary" id="token-save">Save and reload</button><span class="spacer"></span><button class="quiet" id="token-cancel">Cancel</button></div>`;
   p.hidden = false;
   $("token-value").focus();
-  const save = () => { const v = $("token-value").value.trim(); if (!v) { closeTokenPanel(); return; } saveToken(repo, v, $("token-keep").checked); location.reload(); };
+  const save = () => {
+    const v = $("token-value").value.trim();
+    if (!v) { closeTokenPanel(); return; }
+    saveToken(p.querySelector('input[name="token-scope"]:checked').value, v, $("token-keep").checked);
+    location.reload();
+  };
   $("token-save").addEventListener("click", save);
-  $("token-forget")?.addEventListener("click", () => { saveToken(repo, null, false); location.reload(); });
+  for (const b of p.querySelectorAll("[data-forget]")) b.addEventListener("click", () => {
+    const s = b.dataset.forget;
+    saveToken(s, null, false);
+    if (s === using?.scope) location.reload(); else { openTokenPanel(); showTokenButton(); }
+  });
   $("token-cancel").addEventListener("click", closeTokenPanel);
-  p.addEventListener("keydown", (e) => { if (e.key === "Escape") closeTokenPanel(); else if (e.key === "Enter" && e.target.id === "token-value") save(); });
+  p.onkeydown = (e) => { if (e.key === "Escape") closeTokenPanel(); else if (e.key === "Enter" && e.target.id === "token-value") save(); };
 }
 $("token").addEventListener("click", () => ($("token-panel").hidden ? openTokenPanel() : closeTokenPanel()));
-document.addEventListener("click", (e) => { if (!$("token-panel").hidden && !e.target.closest("#token-panel, #token")) closeTokenPanel(); });
+document.addEventListener("click", (e) => { if (!$("token-panel").hidden && !e.composedPath().some((n) => n.id === "token-panel" || n.id === "token")) closeTokenPanel(); });
 
 /** The button to offer when a host refuses, or null when a token wouldn't help. */
-const tokenOffer = (st) => ([401, 403, 404].includes(st) ? { label: tokenFor(repo) ? "Replace the token" : "Add a token", run: openTokenPanel } : null);
+const tokenOffer = (st) => ([401, 403, 404].includes(st) ? { label: tokenFor(repo) ? "Replace or add a token" : "Add a token", run: openTokenPanel } : null);
 
 async function getJson(url, extra = {}) {
   const res = await fetch(url, { headers: { Accept: "application/json", ...auth(repo), ...extra } });
   if (!res.ok) {
-    const host = new URL(url).host, signed = !!tokenFor(repo);
+    const host = new URL(url).host, signed = tokenScope(repo)?.scope;
     const e = new Error(
-      res.status === 401 ? `${host} refused the token. It may be wrong, expired, or for another account.`
-      : res.status === 403 && signed ? `${host} refused the request. The token may not cover this repository.`
+      res.status === 401 ? `${host} refused the token${signed ? ` for ${signed}` : ""}. It may be wrong, expired, or for another account.`
+      : res.status === 403 && signed ? `${host} refused the request. The token for ${signed} may not cover this repository; a narrower one can be added for it.`
       : res.status === 403 && host === "api.github.com" ? "GitHub allows 60 unauthenticated requests an hour from one address, and they are used up. A token raises that to 5,000, or try again in a while."
       : res.status === 404 ? `${host} has no such repository, or ${signed ? "the token cannot see it" : "it is private"}.`
       : `${res.status} ${res.statusText} from ${host}`);
