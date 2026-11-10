@@ -26,7 +26,7 @@ Each file is either **the source of truth** for its subject or **a pointer to it
 1. Copy this directory to `<deployable root>/Documentation/` and delete this `README.md`.
 2. Fill in each file, or replace its body with a pointer and a paragraph. Delete the HTML comments as you go; they are instructions to the writer, not content.
 3. Keep the files in the same commits as the changes they describe. A file nobody has touched since the first commit is a file nobody reads.
-4. If the repository follows [knowledge-driven development](https://github.com/david-brandt-the-icelander/knowledge-driven-development), statements in `requirements.md`, `non-functional-requirements.md` and `architecture.md` carry its marks (✅ ⚠️ ❌ ⛔), and these files are the backlog.
+4. If the repository follows [human-assisted software development](https://github.com/david-brandt-the-icelander/human-assisted-software-development), its capabilities, features, use cases, intended work and technical debt are described in the `.dev/` folders next to the code, and `requirements.md` and `architecture.md` point at them rather than repeating them.
 
 Add to the repository's `AGENTS.md`:
 

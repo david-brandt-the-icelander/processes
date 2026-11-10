@@ -2,9 +2,10 @@
 
 **Source of truth:** here.
 
-<!-- What the deployable does, as capabilities, features and use cases. Each statement carries a mark if the repository follows knowledge-driven development:
-     ✅ true and verified   ⚠️ partly true or unverified   ❌ not true yet   ⛔ decided against.
-     This file is the backlog: a ❌ is work to do, and there is no ticket elsewhere. -->
+<!-- What the deployable does, as capabilities, features and use cases, and what it is meant to do but doesn't yet.
+     If the repository follows human-assisted software development (https://github.com/david-brandt-the-icelander/human-assisted-software-development),
+     the capabilities, features, use cases and intended work are described in the .dev/ folders next to the code. This file then says
+     where they are and keeps only what has no folder of its own: what is out of scope, and the open questions. -->
 
 ## Capabilities
 
@@ -16,9 +17,9 @@
 
 **Features**
 
-- ✅ <!-- A feature: a visible behaviour a user can point at. Link to the tests or code that make it true. -->
-- ❌ <!-- A feature that is not there yet, with what "there" means. -->
-- ⛔ <!-- Something asked for and declined, and why. -->
+- <!-- A feature: a visible behaviour a user can point at. Link to the tests or code that make it true. -->
+- <!-- A feature that is not there yet, with what "there" means and where the wish came from. -->
+- <!-- Something asked for and declined, and why. -->
 
 **Use cases**
 

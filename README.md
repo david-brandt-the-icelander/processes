@@ -5,10 +5,6 @@ Things I make for software development processes in general: conventions, agent 
 ## Layout
 
 ```
-Agents/
-  Skills/                agent skills: how an agent does one particular job in a repository
-                         (architecture diagrams and behavior views per folder, actors,
-                         knowledge-driven development)
 project-management/      conventions for running a project: the twelve documents every
                          deployable carries in its Documentation/ directory, as templates
 ```
@@ -17,8 +13,8 @@ Each directory has its own `README.md` saying what is in it and how to use it.
 
 ## Related repositories
 
-- [human-assisted-software-development](https://github.com/david-brandt-the-icelander/human-assisted-software-development): human-assisted software development (HASD), including the [software system browser](https://github.com/david-brandt-the-icelander/human-assisted-software-development/tree/main/software-system-browser), a static page that draws a repository's `.dev/` diagrams and shows its use cases, capabilities, features and operations.
-- [knowledge-driven-development](https://github.com/david-brandt-the-icelander/knowledge-driven-development): the canonical statement of the convention where the documents describing a system are its backlog, and every statement carries a mark saying whether it is true yet. Repositories link to it rather than restating it; the skill here does the same.
+- [human-assisted-software-development](https://github.com/david-brandt-the-icelander/human-assisted-software-development): human-assisted software development (HASD), including the agent skills for the `.dev/` diagrams and behavior views, the catalogue of knowledge files, and the [software system browser](https://github.com/david-brandt-the-icelander/human-assisted-software-development/tree/main/software-system-browser), a static page that draws a repository's `.dev/` diagrams and shows its use cases, capabilities, features and operations.
+- [knowledge-driven-development](https://github.com/david-brandt-the-icelander/knowledge-driven-development): an earlier experiment, superseded by human-assisted software development. Repositories that adopted it can keep following it there.
 
 ## Using these
 

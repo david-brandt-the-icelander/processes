@@ -31,4 +31,4 @@
 
 ## Known debt
 
-<!-- Marked ❌ or ⚠️: what is wrong with the architecture as built, and what it costs to leave it. -->
+<!-- What is wrong with the architecture as built, and what it costs to leave it. Where the repository keeps .dev/ records, each item is a tech-debt record in the folder it concerns, and this list links to it. -->
