@@ -29,4 +29,4 @@
 
 ## Known issues
 
-<!-- Things that are broken and being lived with, with the workaround and the ❌ in requirements.md they correspond to. -->
+<!-- Things that are broken and being lived with, with the workaround and the bug or requirement each one corresponds to. -->

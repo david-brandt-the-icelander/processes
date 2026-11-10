@@ -15,7 +15,6 @@ Skills that tell an agent how to do one particular job in a repository. Each ski
 | [describe-feature](describe-feature/skill.md) | A folder offers behavior with an outcome and limits on it | `<folder>/.dev/feature.json` |
 | [describe-operation](describe-operation/skill.md) | A folder exposes callable entrypoints: routes, commands, handlers, messages | `<folder>/.dev/operation.json` |
 | [describe-actor](describe-actor/skill.md) | A journey, use case, feature document or diagram names an actor: a person in a role, an external system with goals of its own, or an agent that uses the system | `Actors/<name>.md` |
-| [knowledge-driven-development](knowledge-driven-development/skill.md) | The repository follows [knowledge-driven development](https://github.com/david-brandt-the-icelander/knowledge-driven-development): planning a feature, moving a mark, reviewing a pull request, adopting the convention | Marked knowledge documents, change logs |
 
 `validate_diagrams.py` checks the eight schemas (four diagrams, four behavior views) and their examples, then every `.dev/*.json` view in the repository (skipping `.git`, `node_modules` and build output): schema validity, unique IDs, relationship endpoints, the folder each diagram claims, source paths that exist, and child-diagram references that point at a diagram of the right kind for the right folder, use-case alternatives that branch from a step that exists, and `relatedViews` that point at a view of the kind and folder they claim. If the repository has an `Actors/` folder it checks the actors too: every `actor` field in a diagram and every `Actors/<name>.md` link in a Markdown file lands on a file, and every file in `Actors/` is linked from at least one other file. It needs the `jsonschema` package. Schema validation shows a diagram is well-formed, not that it is true; truth is checked by an agent reading the sources the diagram cites.
 
@@ -46,8 +45,6 @@ Actors are the one thing documented at the repository root rather than next to t
    folder, update them in the same commit as the code, and run
    `python3 Meta/Agents/Skills/validate_diagrams.py` before finishing.
    ```
-
-   For knowledge-driven development, add the block from that repository's `templates/agent-instructions.md`.
 3. Make `CLAUDE.md` a pointer to `AGENTS.md`, so Claude and Codex read one set of instructions:
 
    ```markdown

@@ -30,4 +30,4 @@
 
 ## What is not observed
 
-<!-- The honest list, each a ⚠️: silent failures that would not be noticed, and how they would eventually be found. -->
+<!-- The honest list: silent failures that would not be noticed, and how they would eventually be found. -->

@@ -23,7 +23,7 @@
 
 ## What the pipeline does not check
 
-<!-- Honest list: manual tests, performance, the things that need production data. Each is a ⚠️ until it is automated or accepted. -->
+<!-- Honest list: manual tests, performance, the things that need production data. Each stays on this list until it is automated or accepted. -->
 
 ## Secrets the pipeline holds
 
