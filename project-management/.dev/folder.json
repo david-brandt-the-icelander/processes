@@ -1,0 +1,38 @@
+{
+  "$schema": "../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Project management",
+  "folder": "project-management",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Project management",
+      "summary": "Conventions for running a software project, as opposed to writing its code.",
+      "purpose": "Groups the project-management conventions, one per child folder, each with its own README.md.",
+      "boundaries": [
+        "A convention for writing code, or one tied to a single system, does not belong here.",
+        "The reasoning behind the conventions is in the Processes train on icelander.net, not here."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "project-management/README.md",
+          "symbol": "Project management"
+        }
+      ],
+      "links": [
+        {
+          "path": "project-management/README.md",
+          "label": "README"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": ".dev/references.json",
+          "entityId": "processes-train"
+        }
+      ]
+    }
+  ]
+}

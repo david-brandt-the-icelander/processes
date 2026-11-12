@@ -1,0 +1,45 @@
+{
+  "$schema": "../Meta/Agents/Knowledge/schemas/vision.schema.json",
+  "kind": "vision",
+  "title": "Why processes exists",
+  "folder": ".",
+  "entities": [
+    {
+      "id": "processes-written-down",
+      "title": "Processes written down where agents read them",
+      "summary": "General software development processes, written down as conventions, templates and tools that any repository can copy or link to.",
+      "problem": "Most of the builders on the owner's teams are now agents, and an agent follows a process only if the process is written down where the agent will read it.",
+      "audience": [
+        "Teams whose builders are mostly agents, and the people who direct them",
+        "Repositories that adopt a convention by copying it or linking to it"
+      ],
+      "outcome": "Each process is written down once, here, not tied to any one system; a repository that adopts it copies what it needs and links to what it references, so that there is one copy to drift.",
+      "nonGoals": [
+        "Conventions tied to one system: those belong in that system's repository."
+      ],
+      "origin": {
+        "kind": "document",
+        "by": "Owner",
+        "reference": "README.md"
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "README.md",
+          "symbol": "Processes"
+        },
+        {
+          "path": "README.md",
+          "symbol": "Using these"
+        }
+      ],
+      "links": [
+        {
+          "url": "https://icelander.net/v1/processes",
+          "label": "The Processes train on icelander.net",
+          "description": "The reasoning behind the conventions."
+        }
+      ]
+    }
+  ]
+}

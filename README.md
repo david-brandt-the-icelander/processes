@@ -7,13 +7,16 @@ Things I make for software development processes in general: conventions, agent 
 ```
 project-management/      conventions for running a project: the twelve documents every
                          deployable carries in its Documentation/ directory, as templates
+Meta/Agents/             the skills and knowledge catalogue the .dev/ folders follow, copied
+                         from human-assisted-software-development
 ```
 
-Each directory has its own `README.md` saying what is in it and how to use it.
+Each directory has its own `README.md` saying what is in it and how to use it. Each maintained folder also has a `.dev/` directory describing it for agents: what it is for, the terms it uses, what other repositories rely on, the decisions taken and waiting, and the work wanted. [AGENTS.md](AGENTS.md) says how they are kept.
 
 ## Related repositories
 
-- [human-assisted-software-development](https://github.com/david-brandt-the-icelander/human-assisted-software-development): human-assisted software development (HASD), including the agent skills for the `.dev/` diagrams and behavior views, the catalogue of knowledge files, and the [software system browser](https://github.com/david-brandt-the-icelander/human-assisted-software-development/tree/main/software-system-browser), a static page that draws a repository's `.dev/` diagrams and shows its use cases, capabilities, features and operations.
+- [human-assisted-software-development](https://github.com/david-brandt-the-icelander/human-assisted-software-development): human-assisted software development (HASD), including the agent skills for the `.dev/` diagrams and behavior views, and the catalogue of knowledge files. This repository's `Meta/Agents/` is a copy of them.
+- [cyberspace-explorer](https://github.com/david-brandt-the-icelander/cyberspace-explorer): the Cyberspace explorer, a page that draws a repository's `.dev/` folders.
 - [knowledge-driven-development](https://github.com/david-brandt-the-icelander/knowledge-driven-development): an earlier experiment, superseded by human-assisted software development. Repositories that adopted it can keep following it there.
 
 ## Using these

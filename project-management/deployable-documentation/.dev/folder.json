@@ -1,0 +1,43 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "Deployable documentation",
+  "folder": "project-management/deployable-documentation",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "Deployable documentation",
+      "summary": "The twelve Markdown documents every deployable carries in a Documentation/ directory under its root, as templates to copy.",
+      "purpose": "Holds one template per document (business plan, stakeholders, risk assessment, requirements, non-functional requirements, architecture, deployment, CI/CD, development, operations, observability and contacts) and a README.md that says what each answers, how to adopt them, and the section to add to an adopting repository's AGENTS.md. Each template opens by saying whether it is the source of truth for its subject or a pointer to it, and carries the writer's guidance in HTML comments that are deleted as the document is filled in.",
+      "boundaries": [
+        "The templates are copied into a deployable's Documentation/ directory; nothing in this folder is filled in for a real system.",
+        "In a repository that follows human-assisted software development, capabilities, features, use cases, intended work and technical debt live in .dev folders next to the code, and requirements.md and architecture.md point at them rather than repeating them."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Deployable documentation"
+        },
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Using the templates"
+        },
+        {
+          "path": "project-management/deployable-documentation/requirements.md",
+          "symbol": "Requirements"
+        },
+        {
+          "path": "project-management/deployable-documentation/architecture.md",
+          "symbol": "Known debt"
+        }
+      ],
+      "links": [
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "label": "README"
+        }
+      ]
+    }
+  ]
+}
