@@ -1,0 +1,81 @@
+{
+  "$schema": "../Meta/Agents/Skills/describe-component-diagram/schema.json",
+  "kind": "component",
+  "title": "processes component diagram",
+  "folder": ".",
+  "description": "The repository's parts: the project-management conventions, the skills and knowledge catalogue its .dev folders follow, and the repository those are copied from, which in turn links back to the deployable documentation.",
+  "sources": [
+    {
+      "path": "README.md",
+      "symbol": "Layout"
+    },
+    {
+      "path": "AGENTS.md",
+      "symbol": "Architecture diagrams and knowledge files"
+    },
+    {
+      "path": "Meta/Agents/Skills/validate_diagrams.py",
+      "symbol": "validate"
+    },
+    {
+      "path": "Meta/Agents/Knowledge/validate_knowledge.py",
+      "symbol": "main"
+    },
+    {
+      "path": "Meta/Agents/Knowledge/README.md",
+      "symbol": "Where the twelve deployable documents went"
+    }
+  ],
+  "components": [
+    {
+      "id": "processes",
+      "name": "processes",
+      "responsibility": "Conventions, templates and tools for software development processes that are not tied to any one system.",
+      "folder": "."
+    },
+    {
+      "id": "project-management",
+      "name": "Project management (project-management)",
+      "responsibility": "Conventions for running a project; today the twelve documents every deployable carries, as templates to copy.",
+      "folder": "project-management"
+    },
+    {
+      "id": "meta-agents",
+      "name": "Skills and knowledge catalogue (Meta/Agents)",
+      "responsibility": "How .dev files are written, and the two validators that check every .dev file in the repository; a copy, changed only where it comes from.",
+      "folder": "Meta/Agents"
+    },
+    {
+      "id": "hasd",
+      "name": "human-assisted-software-development",
+      "responsibility": "Another repository: the source of the skills and the knowledge catalogue, whose catalogue adapts the twelve deployable documents into knowledge kinds.",
+      "external": true
+    }
+  ],
+  "relationships": [
+    {
+      "from": "processes",
+      "to": "project-management",
+      "kind": "contains",
+      "description": "Part of the repository."
+    },
+    {
+      "from": "processes",
+      "to": "meta-agents",
+      "kind": "contains",
+      "description": "Part of the repository."
+    },
+    {
+      "from": "meta-agents",
+      "to": "hasd",
+      "kind": "depends-on",
+      "description": "Copied unchanged from its Agents/Skills and Agents/Knowledge; changed there and copied here."
+    },
+    {
+      "from": "hasd",
+      "to": "project-management",
+      "kind": "depends-on",
+      "description": "Its knowledge catalogue links to project-management/deployable-documentation and maps each of the twelve documents to the kinds adapted from it."
+    }
+  ]
+}

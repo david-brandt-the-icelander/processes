@@ -1,0 +1,67 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/backlog.schema.json",
+  "kind": "backlog",
+  "title": "Deployable documentation backlog",
+  "folder": "project-management/deployable-documentation",
+  "entities": [
+    {
+      "id": "readme-still-mentions-marks",
+      "title": "The README's table still describes requirements \"with their marks\"",
+      "type": "defect",
+      "status": "proposed",
+      "summary": "The README describes requirements.md as answering \"what it does, as capabilities and features, with their marks\", but the marks were knowledge-driven development's and were taken out of the templates.",
+      "expected": "The README's row for requirements.md describes what the template now holds: capabilities, features and use cases, what is out of scope and the open questions, without knowledge-driven development's marks.",
+      "observed": "The row reads \"What it does, as capabilities and features, with their marks\"; requirements.md itself no longer mentions marks.",
+      "origin": {
+        "kind": "review",
+        "by": "Agent",
+        "date": "2026-11-12",
+        "description": "Found while bringing processes in line with human-assisted software development."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Deployable documentation"
+        },
+        {
+          "path": "project-management/deployable-documentation/requirements.md",
+          "symbol": "Requirements"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": ".dev/decisions.json",
+          "entityId": "retire-knowledge-driven-development"
+        }
+      ]
+    },
+    {
+      "id": "business-plan-guidance-above-heading",
+      "title": "business-plan.md puts its Purpose guidance above the heading",
+      "type": "defect",
+      "status": "proposed",
+      "summary": "In business-plan.md the guidance comment for Purpose sits above the \"## Purpose\" heading, and the line after the title is a comment rather than the source-of-truth line; every other template puts the source-of-truth line straight after the title and each section's guidance under its heading.",
+      "expected": "As in the other eleven templates and as the README says: the first line after the title is \"**Source of truth:** ...\", and the Purpose guidance follows the \"## Purpose\" heading.",
+      "observed": "The title is followed by a comment explaining the source-of-truth line, then \"**Source of truth:** here.\", then the comment \"One paragraph. What this deployable does for the business ...\", then \"## Purpose\" with nothing under it.",
+      "origin": {
+        "kind": "review",
+        "by": "Agent",
+        "date": "2026-11-12",
+        "description": "Found while bringing processes in line with human-assisted software development."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "project-management/deployable-documentation/business-plan.md",
+          "symbol": "Purpose"
+        },
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Deployable documentation"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "../Meta/Agents/Knowledge/schemas/folder.schema.json",
+  "kind": "folder",
+  "title": "processes",
+  "folder": ".",
+  "entities": [
+    {
+      "id": "folder",
+      "title": "processes",
+      "summary": "Conventions, templates and tools for software development processes in general, not tied to any one system, written down so that agents as well as people follow them.",
+      "purpose": "The repository root holds the conventions in project-management/, the skills and knowledge catalogue its own .dev files follow in Meta/Agents/, and the README a reader starts from. Each convention is meant to be copied into, or linked from, another repository.",
+      "boundaries": [
+        "Nothing here is built, run or deployed: the folders hold Markdown documents and templates, and Meta/Agents holds the validators the .dev files are checked with.",
+        "Meta/Agents/Skills and Meta/Agents/Knowledge are copies of Agents/Skills and Agents/Knowledge in the human-assisted-software-development repository, changed there and copied here.",
+        "The agent skills and the page that draws .dev folders used to live here and now live in other repositories; the README links to them."
+      ],
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "README.md",
+          "symbol": "Layout"
+        },
+        {
+          "path": "README.md",
+          "symbol": "Related repositories"
+        },
+        {
+          "path": "README.md",
+          "symbol": "Using these"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "Architecture diagrams and knowledge files"
+        }
+      ],
+      "links": [
+        {
+          "path": "README.md",
+          "label": "README"
+        },
+        {
+          "path": "AGENTS.md",
+          "label": "Agent instructions"
+        },
+        {
+          "path": ".dev/component-diagram.json",
+          "label": "The repository's parts"
+        },
+        {
+          "path": ".dev/vision.json",
+          "label": "Why the repository exists"
+        },
+        {
+          "path": ".dev/decisions.json",
+          "label": "What moved out, and why"
+        }
+      ]
+    }
+  ]
+}

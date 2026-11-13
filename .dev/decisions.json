@@ -1,0 +1,86 @@
+{
+  "$schema": "../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Decisions about the repository",
+  "folder": ".",
+  "entities": [
+    {
+      "id": "retire-knowledge-driven-development",
+      "title": "Retire knowledge-driven development from processes",
+      "summary": "Knowledge-driven development is superseded by human-assisted software development, and processes no longer offers it.",
+      "status": "accepted",
+      "context": "processes carried a knowledge-driven-development skill, its READMEs offered it, and the deployable-documentation templates carried its marks. Human-assisted software development covers the same ground with .dev folders and knowledge files.",
+      "decision": "Remove the knowledge-driven-development skill, stop offering it in the READMEs, and take its marks out of the deployable-documentation templates: requirements and architecture point at the .dev records a HASD repository keeps, and status columns say met, not met or not checked. Repositories that adopted it keep following it in its own repository.",
+      "decidedBy": "Owner",
+      "decidedOn": "2026-11-10",
+      "origin": {
+        "kind": "document",
+        "by": "Owner",
+        "date": "2026-11-10",
+        "reference": "Commit 0b850cc, merged in pull request #10"
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "README.md",
+          "symbol": "Related repositories"
+        },
+        {
+          "path": "project-management/deployable-documentation/requirements.md",
+          "symbol": "Requirements"
+        },
+        {
+          "path": "project-management/deployable-documentation/non-functional-requirements.md",
+          "symbol": "Non-functional requirements"
+        }
+      ],
+      "links": [
+        {
+          "url": "https://github.com/david-brandt-the-icelander/processes/pull/10",
+          "label": "Pull request #10"
+        }
+      ]
+    },
+    {
+      "id": "skills-live-in-hasd",
+      "title": "The agent skills and the .dev browser live outside processes",
+      "summary": "The describe-* skills, their schemas, examples and validator, and the page that draws .dev folders moved out of processes; processes links to them and keeps a copy of the skills only to check its own .dev files.",
+      "status": "accepted",
+      "context": "processes held the architecture browser and the describe-* skills with their schemas, examples and validate_diagrams.py. The knowledge catalogue they belong with is in the human-assisted-software-development repository.",
+      "decision": "Move the browser and the skills to human-assisted-software-development, next to the knowledge catalogue, and link to them from the README. The browser has since moved on to its own repository, the Cyberspace explorer.",
+      "decidedBy": "Owner",
+      "decidedOn": "2026-11-10",
+      "origin": {
+        "kind": "document",
+        "by": "Owner",
+        "date": "2026-11-10",
+        "reference": "Commits dde361f and cf3ac4d, merged in pull requests #9 and #10"
+      },
+      "evidenceStatus": "documented",
+      "sources": [
+        {
+          "path": "README.md",
+          "symbol": "Related repositories"
+        },
+        {
+          "path": "AGENTS.md",
+          "symbol": "Architecture diagrams and knowledge files"
+        }
+      ],
+      "links": [
+        {
+          "url": "https://github.com/david-brandt-the-icelander/processes/pull/9",
+          "label": "Pull request #9"
+        },
+        {
+          "url": "https://github.com/david-brandt-the-icelander/processes/pull/10",
+          "label": "Pull request #10"
+        },
+        {
+          "url": "https://github.com/david-brandt-the-icelander/cyberspace-explorer",
+          "label": "Cyberspace explorer"
+        }
+      ]
+    }
+  ]
+}

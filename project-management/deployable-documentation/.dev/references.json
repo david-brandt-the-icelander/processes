@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/references.schema.json",
+  "kind": "references",
+  "title": "References for the deployable documentation",
+  "folder": "project-management/deployable-documentation",
+  "entities": [
+    {
+      "id": "human-assisted-software-development",
+      "title": "human-assisted-software-development",
+      "summary": "Human-assisted software development (HASD): .dev folders next to the code, holding diagrams, behavior views and knowledge files.",
+      "url": "https://github.com/david-brandt-the-icelander/human-assisted-software-development",
+      "relevance": "In a repository that follows it, requirements.md and architecture.md point at the .dev folders rather than repeating them (README.md, step 4 of \"Using the templates\"; the opening comment of requirements.md; architecture.md, \"Known debt\"). Its knowledge catalogue maps each of the twelve documents to the kinds adapted from it."
+    }
+  ]
+}

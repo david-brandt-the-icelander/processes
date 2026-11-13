@@ -1,0 +1,43 @@
+{
+  "$schema": "../Meta/Agents/Knowledge/schemas/references.schema.json",
+  "kind": "references",
+  "title": "References for the repository",
+  "folder": ".",
+  "entities": [
+    {
+      "id": "processes-train",
+      "title": "The Processes train on icelander.net",
+      "summary": "The owner's writing on software development processes.",
+      "url": "https://icelander.net/v1/processes",
+      "relevance": "The reasoning behind every convention here (README.md, project-management/README.md)."
+    },
+    {
+      "id": "human-assisted-software-development",
+      "title": "human-assisted-software-development",
+      "summary": "Human-assisted software development (HASD): the agent skills for the .dev diagrams and behavior views, and the catalogue of knowledge files.",
+      "url": "https://github.com/david-brandt-the-icelander/human-assisted-software-development",
+      "relevance": "Where Meta/Agents/Skills and Meta/Agents/Knowledge come from; change them there and copy them here (AGENTS.md)."
+    },
+    {
+      "id": "cyberspace-explorer",
+      "title": "Cyberspace explorer",
+      "summary": "The page that draws a repository's .dev folders.",
+      "url": "https://github.com/david-brandt-the-icelander/cyberspace-explorer",
+      "relevance": "How a person reads the .dev files of this repository and of the repositories that adopt its conventions."
+    },
+    {
+      "id": "knowledge-driven-development",
+      "title": "knowledge-driven-development",
+      "summary": "An earlier experiment, superseded by human-assisted software development.",
+      "url": "https://github.com/david-brandt-the-icelander/knowledge-driven-development",
+      "relevance": "Repositories that adopted it keep following it there; nothing here uses it any more.",
+      "relationships": [
+        {
+          "relation": "relates-to",
+          "path": ".dev/decisions.json",
+          "entityId": "retire-knowledge-driven-development"
+        }
+      ]
+    }
+  ]
+}

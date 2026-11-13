@@ -1,0 +1,64 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/glossary.schema.json",
+  "kind": "glossary",
+  "title": "Deployable documentation glossary",
+  "folder": "project-management/deployable-documentation",
+  "entities": [
+    {
+      "id": "deployable",
+      "title": "Deployable",
+      "summary": "A thing that gets deployed as a unit: a service, a Worker, an app, a scheduled job, a library published as a package. Each carries its own Documentation/ directory under its root.",
+      "notToBeConfusedWith": [
+        "Repository: where source is kept. Often the same thing as a deployable; in a monorepo, one repository holds several deployables."
+      ],
+      "sources": [
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Deployable documentation"
+        }
+      ]
+    },
+    {
+      "id": "repository",
+      "title": "Repository",
+      "summary": "Where source is kept. In a monorepo, each deployable gets its own Documentation/ under its own root, and the repository's top level keeps only what is shared.",
+      "notToBeConfusedWith": [
+        "Deployable: the thing deployed as a unit."
+      ],
+      "sources": [
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Deployable documentation"
+        }
+      ]
+    },
+    {
+      "id": "source-of-truth",
+      "title": "Source of truth",
+      "summary": "A document that holds its subject itself, rather than pointing at where it is held. Each template's first line after the title says whether it is the source of truth or a pointer.",
+      "notToBeConfusedWith": [
+        "Pointer file"
+      ],
+      "sources": [
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Deployable documentation"
+        }
+      ]
+    },
+    {
+      "id": "pointer-file",
+      "title": "Pointer file",
+      "summary": "A document whose subject is held elsewhere (a business plan in another document, an on-call rota in the paging tool). It links there and still says, in a paragraph, what the reader will find and why it matters to the deployable, so that the link going dead is noticed.",
+      "notToBeConfusedWith": [
+        "Source of truth"
+      ],
+      "sources": [
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Deployable documentation"
+        }
+      ]
+    }
+  ]
+}

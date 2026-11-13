@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/contracts.schema.json",
+  "kind": "contracts",
+  "title": "What other repositories rely on in the deployable documentation",
+  "folder": "project-management/deployable-documentation",
+  "entities": [
+    {
+      "id": "twelve-documents",
+      "title": "The twelve documents, at this folder's address",
+      "summary": "Adopting repositories and human-assisted-software-development refer to this folder by its address on main and to the twelve documents by their file names.",
+      "contractType": "document-set",
+      "consumers": [
+        "Repositories that adopt the convention: the AGENTS.md section the README tells them to add names this folder's address and the twelve files described there.",
+        "human-assisted-software-development: Agents/Knowledge/README.md, under \"Where the twelve deployable documents went\", links to this folder's address and maps each of the twelve file names to the knowledge kinds adapted from it."
+      ],
+      "guarantees": [
+        "Twelve files: business-plan.md, stakeholders.md, risk-assessment.md, requirements.md, non-functional-requirements.md, architecture.md, deployment.md, cicd.md, development.md, operations.md, observability.md and contacts.md.",
+        "Each opens, after its title, by saying whether it is the source of truth for its subject or a pointer to it."
+      ],
+      "compatibility": "Moving or renaming the folder or one of the files breaks the address quoted in adopting repositories' AGENTS.md and the mapping in human-assisted-software-development; both would have to be repaired.",
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Using the templates"
+        },
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Deployable documentation"
+        }
+      ],
+      "links": [
+        {
+          "url": "https://github.com/david-brandt-the-icelander/human-assisted-software-development/blob/main/Agents/Knowledge/README.md#where-the-twelve-deployable-documents-went",
+          "label": "Where the twelve deployable documents went"
+        }
+      ]
+    }
+  ]
+}

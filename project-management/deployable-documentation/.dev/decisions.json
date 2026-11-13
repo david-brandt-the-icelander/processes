@@ -1,0 +1,89 @@
+{
+  "$schema": "../../../Meta/Agents/Knowledge/schemas/decisions.schema.json",
+  "kind": "decisions",
+  "title": "Decisions about the deployable documentation",
+  "folder": "project-management/deployable-documentation",
+  "entities": [
+    {
+      "id": "requirements-and-architecture-point-at-dev",
+      "title": "In a HASD repository, requirements and architecture point at the .dev folders",
+      "summary": "requirements.md and architecture.md keep only what has no folder of their own, and point at the .dev records for capabilities, features, use cases, intended work and technical debt.",
+      "status": "accepted",
+      "context": "The templates carried knowledge-driven development's marks. A repository that follows human-assisted software development keeps the same facts in .dev folders next to the code.",
+      "decision": "requirements.md says where the .dev records are and keeps what is out of scope and the open questions; architecture.md's known debt links to the debt records in the folders they concern; the README says so in step 4 of \"Using the templates\".",
+      "decidedBy": "Owner",
+      "decidedOn": "2026-11-10",
+      "origin": {
+        "kind": "document",
+        "by": "Owner",
+        "date": "2026-11-10",
+        "reference": "Commit 0b850cc, merged in pull request #10"
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Using the templates"
+        },
+        {
+          "path": "project-management/deployable-documentation/requirements.md",
+          "symbol": "Requirements"
+        },
+        {
+          "path": "project-management/deployable-documentation/architecture.md",
+          "symbol": "Known debt"
+        }
+      ],
+      "relationships": [
+        {
+          "relation": "part-of",
+          "path": ".dev/decisions.json",
+          "entityId": "retire-knowledge-driven-development"
+        }
+      ]
+    },
+    {
+      "id": "other-ten-documents-in-hasd-repositories",
+      "title": "What the other ten documents become in a HASD repository",
+      "summary": "Whether a repository that follows human-assisted software development still writes the other ten documents in Documentation/, or points them at the knowledge files that hold the same facts.",
+      "status": "open",
+      "context": "The README's step 4 makes only requirements.md and architecture.md point at the .dev folders, and the AGENTS.md section it asks adopters to add says every deployable carries all twelve files. Human-assisted software development's knowledge catalogue maps every one of the twelve to a kind kept in .dev (business-plan.md to vision, stakeholders.md to stakeholders, risk-assessment.md to risks, deployment.md to delivery, cicd.md to pipeline, operations.md to runbooks and limitations, and so on), and its rule is one owner per fact. A HASD repository that follows both would hold, for example, its shutdown criteria in business-plan.md and in a vision record. The documents do not say which one owns the fact.",
+      "waitingOn": "Owner",
+      "options": [
+        {
+          "title": "All twelve become pointers in a HASD repository",
+          "consequences": "Each Documentation/ file names the .dev knowledge file that holds its subject and keeps a paragraph saying what is there; step 4 and the AGENTS.md section change to say so."
+        },
+        {
+          "title": "Only requirements and architecture point at .dev, as now",
+          "consequences": "The other ten stay the source of truth for their subjects, and a HASD repository does not write the knowledge kinds adapted from them."
+        },
+        {
+          "title": "A HASD repository carries no Documentation/ directory",
+          "consequences": "The knowledge files replace the twelve documents; the README and the AGENTS.md section say the convention applies only to repositories that do not follow HASD."
+        }
+      ],
+      "origin": {
+        "kind": "review",
+        "by": "Agent",
+        "date": "2026-11-12",
+        "description": "Found while bringing processes in line with human-assisted software development, by reading the README against the knowledge catalogue."
+      },
+      "evidenceStatus": "source-verified",
+      "sources": [
+        {
+          "path": "project-management/deployable-documentation/README.md",
+          "symbol": "Using the templates"
+        },
+        {
+          "path": "Meta/Agents/Knowledge/README.md",
+          "symbol": "Where the twelve deployable documents went"
+        },
+        {
+          "path": "Meta/Agents/Knowledge/README.md",
+          "symbol": "Rules"
+        }
+      ]
+    }
+  ]
+}
